@@ -73,6 +73,7 @@ class RecordParagraphSpanPrediction(Evaluator):
 
         results = {}
         results["n_answers"] = [0 if x.answer is None else len(x.answer.answer_spans) for x in data]
+        results["question"] = [' '.join(x.question) for x in data]
         if self.record_text_ans:
             results["text_answer"] = text_answers
         results["predicted_score"] = model_scores
@@ -227,6 +228,10 @@ def main():
         raise RuntimeError()
 
     df = pd.DataFrame(evaluation.per_sample)
+
+    # Alon: outputing the estimates for all the
+    df.sort_values(by=['question_id', 'predicted_score'], ascending=False).set_index(['question_id', 'text_answer'])[
+        ['question','predicted_score', 'text_em']].to_csv('results.csv')
 
     if args.official_output is not None:
         print("Saving question result")

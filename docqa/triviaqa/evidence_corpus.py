@@ -47,21 +47,22 @@ def build_tokenized_files(filenames, input_root, output_root, tokenizer, overrid
     """
     voc = set()
     for filename in filenames:
-        out_file = normalize_wiki_filename(filename[:filename.rfind(".")]) + ".txt"
-        out_file = join(output_root, out_file)
-        if not override and exists(out_file):
-            continue
-        with open(join(input_root, filename), "r") as in_file:
-            text = in_file.read().strip()
-        paras = [x for x in text.split("\n") if len(x) > 0]
-        paragraphs = [tokenizer.tokenize_paragraph(x) for x in paras]
+        if filename.find('DS_Store') == -1:
+            out_file = normalize_wiki_filename(filename[:filename.rfind(".")]) + ".txt"
+            out_file = join(output_root, out_file)
+            if not override and exists(out_file):
+                continue
+            with open(join(input_root, filename), "r") as in_file:
+                text = in_file.read().strip()
+            paras = [x for x in text.split("\n") if len(x) > 0]
+            paragraphs = [tokenizer.tokenize_paragraph(x) for x in paras]
 
-        for para in paragraphs:
-            for i, sent in enumerate(para):
-                voc.update(sent)
+            for para in paragraphs:
+                for i, sent in enumerate(para):
+                    voc.update(sent)
 
-        with open(join(output_root, out_file), "w") as in_file:
-            in_file.write("\n\n".join("\n".join(" ".join(sent) for sent in para) for para in paragraphs))
+            with open(join(output_root, out_file), "w") as in_file:
+                in_file.write("\n\n".join("\n".join(" ".join(sent) for sent in para) for para in paragraphs))
     return voc
 
 

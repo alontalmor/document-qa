@@ -164,8 +164,8 @@ def build_unfiltered_corpus(n_processes):
     build_dataset("web-open", NltkAndPunctTokenizer(),
                   dict(
                       dev=join(TRIVIA_QA_UNFILTERED, "unfiltered-web-dev.json"),
-                      train=join(TRIVIA_QA_UNFILTERED, "unfiltered-web-train.json"),
-                      test=join(TRIVIA_QA_UNFILTERED, "unfiltered-web-test-without-answers.json")
+                      #train=join(TRIVIA_QA_UNFILTERED, "unfiltered-web-train.json"),
+                      #test=join(TRIVIA_QA_UNFILTERED, "unfiltered-web-test-without-answers.json")
                   ),
                   answer_detector=FastNormalizedAnswerDetector(),
                   n_process=n_processes)
