@@ -30,6 +30,11 @@ from nltk.metrics import *
 from nltk import pos_tag, word_tokenize
 from nltk.corpus import stopwords
 from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED
+parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
+parser.add_argument('-m', '--model',
+                        default="../../models-cpu/triviaqa-web-shared-norm")
+args = parser.parse_args()
+
 
 
 def str2bool(v):
@@ -173,7 +178,7 @@ while True:
                             preexec_fn=os.setsid)
 
             # running the docqa evaluation
-            wa_proc = call('python ../eval/triviaqa_full_document_eval.py --n_processes 8 -c open-dev --tokens 800     ../../models-cpu/triviaqa-web-shared-norm', shell=True,
+            wa_proc = call('python ../eval/triviaqa_full_document_eval.py --n_processes 8 --n_paragraphs 100  -c open-dev --tokens 800  ' + args.model, shell=True,
                             preexec_fn=os.setsid)
 
             # storing results
