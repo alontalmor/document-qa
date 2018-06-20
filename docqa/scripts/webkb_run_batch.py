@@ -30,6 +30,8 @@ from nltk.metrics import *
 from nltk import pos_tag, word_tokenize
 from nltk.corpus import stopwords
 from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED
+
+
 parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
 parser.add_argument('-m', '--model',
                         default="../../models-cpu/triviaqa-web-shared-norm")
