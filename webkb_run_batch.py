@@ -35,7 +35,7 @@ from os.path import relpath, join, exists
 
 parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
 parser.add_argument('-m', '--model',
-                        default="../../models-cpu/triviaqa-web-shared-norm")
+                        default="models-cpu/triviaqa-web-shared-norm")
 args = parser.parse_args()
 
 def str2bool(v):
@@ -93,7 +93,7 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
 
     # deleting prev evidence (only one at a time)
     if not os.path.isdir(TRIVIA_QA +'/evidence/batch_run'):
-        os.mkdir(TRIVIA_QA + 'evidence/batch_run')
+        os.mkdir(TRIVIA_QA + '/evidence/batch_run')
 
     if DELETE_PREV_EVIDENCE:
         shutil.rmtree(TRIVIA_QA + '/evidence/batch_run/')
@@ -120,7 +120,7 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
         for ind, g in enumerate(google_results):
             file_ind = file_ind % 10
             if len(files) <= file_ind:
-                file_name = str(int(train_file_ind / 100)
+                file_name = 'batch_run/' + str(int(train_file_ind / 100)
                                 ) + "/" + questionID + '_' + str(file_ind) + '.txt'
                 SearchResults.append(
                     {'Rank': ind, 'Description': g['snippet'], 'Title': g['title'], 'DisplayUrl': g['url'], \
@@ -136,7 +136,7 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
         # saving files
         if WRITE_EVIDENCE:
             for file_str, file_name in zip(files, filenames):
-                with open(TRIVIA_QA + '/evidence/batch_run/' + file_name, 'w') as outfile:
+                with open(TRIVIA_QA + '/evidence/' + file_name, 'w') as outfile:
                     outfile.write(file_str)
 
         questions_triviaqa_format.at[questionID, 'SearchResults'] = SearchResults
@@ -145,8 +145,9 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
 
     #questions_triviaqa_format['Answer'] = all_answers
     #questions_triviaqa_format = questions_triviaqa_format[questions_triviaqa_format['Answer'].notnull()]
-
-    with open(TRIVIA_QA_UNFILTERED + '/unfiltered-web-dev.json','w') as f:
+    if not os.path.isdir(TRIVIA_QA_UNFILTERED + '/batch_run'):
+        os.mkdir(TRIVIA_QA_UNFILTERED + '/batch_run')
+    with open(TRIVIA_QA_UNFILTERED + '/batch_run/unfiltered-web-dev.json','w') as f:
         f.write(json.dumps(triviaqa_dict, sort_keys=True, indent=4))
 
 dirs_to_process = []
@@ -182,11 +183,13 @@ while True:
             source_dir = join(TRIVIA_QA_UNFILTERED, 'batch_run')
             target_dir = join(CORPUS_DIR, "triviaqa", "web-open", 'batch_run')
             print('running build_span_corpus')
-            call('python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 --source_dir ' + source_dir \
+            call('python docqa/triviaqa/build_span_corpus.py web-open --sets_to_build dev --n_processes 8 --source_dir ' + source_dir \
                  + ' --target_dir ' + target_dir, shell=True, preexec_fn=os.setsid)
 
             # running the docqa evaluation
-            wa_proc = call('python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 --n_paragraphs 100  -c open-dev --tokens 800  ' + args.model, shell=True,
+            source_dir = target_dir
+            wa_proc = call('python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 --n_paragraphs 100  -c open-dev' + \
+                           ' --tokens 800  ' + args.model + ' --source_dir ' + source_dir, shell=True,
                             preexec_fn=os.setsid)
 
             # storing results

@@ -62,8 +62,6 @@ if args.build_evidence:
 source_dir = join(TRIVIA_QA_UNFILTERED, args.exp_name)
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.exp_name)
 print('running build_span_corpus')
-print(source_dir)
-print(target_dir)
 command = 'python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 --sets_to_build dev,train --source_dir ' + source_dir \
                + ' --target_dir ' + target_dir
 print(command)

@@ -116,6 +116,8 @@ def main():
                         choices=["web-dev", "web-test", "web-verified-dev", "web-train",
                                  "open-dev", "open-train", "wiki-dev", "wiki-test"],
                         default="web-verified-dev")
+    parser.add_argument("-s", "--source_dir", type=str, default=None,
+                        help="where to take input files")
     args = parser.parse_args()
 
     model_dir = ModelDir(args.model)
@@ -142,7 +144,7 @@ def main():
         else:
             raise AssertionError()
     else:
-        dataset = TriviaQaOpenDataset()
+        dataset = TriviaQaOpenDataset(args.source_dir)
         if args.corpus == "open-dev":
             test_questions = dataset.get_dev()
         elif args.corpus == "open-train":
