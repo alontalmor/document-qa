@@ -33,10 +33,18 @@ from nltk.corpus import stopwords
 from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED, CORPUS_DIR
 from os.path import relpath, join, exists
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
 parser.add_argument('exp_name',default="test")
-parser.add_argument("-e", "--build_evidence", type=bool, default=True,
-                        help="should we build the evidence as well?")
+parser.add_argument('--build_evidence', type=str2bool, default=True, nargs='?', const=True , \
+                    help="should we build the evidence as well?")
 args = parser.parse_args()
 
 # running evidence_corpus (This builds evidence)
@@ -52,7 +60,9 @@ if args.build_evidence:
 source_dir = join(TRIVIA_QA_UNFILTERED, args.exp_name)
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.exp_name)
 print('running build_span_corpus')
-call('python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 --source_dir ' + source_dir \
+print(source_dir)
+print(target_dir)
+call('python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 --sets_to_build dev,train --source_dir ' + source_dir \
                + ' --target_dir ' + target_dir, shell=True, preexec_fn=os.setsid)
 
 # running the docqa evaluation
