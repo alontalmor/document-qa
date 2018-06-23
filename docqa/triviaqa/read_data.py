@@ -16,7 +16,8 @@ def normalize_wiki_filename(filename):
     the incorrect case sometimes, and we have to be careful to keep a consistent unicode format.
     Our current solution is require all filenames to be normalized like this
     """
-    return unicodedata.normalize("NFD", filename).lower()
+    # ALON removed the lower case here
+    return unicodedata.normalize("NFD", filename)
 
 
 class WikipediaEntity(object):

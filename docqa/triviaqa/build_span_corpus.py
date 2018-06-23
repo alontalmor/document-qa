@@ -25,8 +25,11 @@ already been preprocessed
 
 def build_dataset(name: str, tokenizer, train_files: Dict[str, str],
                   answer_detector, n_process: int, prune_unmapped_docs=True,
-                  sample=None):
-    out_dir = join(CORPUS_DIR, "triviaqa", name)
+                  sample=None,out_dir=None):
+    # default outputdir
+    if out_dir is None:
+        out_dir = join(CORPUS_DIR, "triviaqa", name)
+
     if not exists(out_dir):
         mkdir(out_dir)
 
@@ -73,9 +76,13 @@ def build_dataset(name: str, tokenizer, train_files: Dict[str, str],
 
 
 class TriviaQaSpanCorpus(Configurable):
-    def __init__(self, corpus_name):
+    def __init__(self, corpus_name, input_dir=None):
         self.corpus_name = corpus_name
-        self.dir = join(CORPUS_DIR, "triviaqa", corpus_name)
+        if input_dir is None:
+            self.dir = join(CORPUS_DIR, "triviaqa", corpus_name)
+        else:
+            self.dir = input_dir
+
         with open(join(self.dir, "file_map.json"), "r") as f:
             file_map = json.load(f)
         for k, v in file_map.items():
@@ -120,8 +127,8 @@ class TriviaQaWikiDataset(TriviaQaSpanCorpus):
 
 
 class TriviaQaOpenDataset(TriviaQaSpanCorpus):
-    def __init__(self):
-        super().__init__("web-open")
+    def __init__(self,source_dir = None):
+        super().__init__("web-open", input_dir = source_dir)
 
 
 class TriviaQaSampleWebDataset(TriviaQaSpanCorpus):
@@ -160,33 +167,40 @@ def build_sample_corpus(n_processes):
                   FastNormalizedAnswerDetector(), n_processes, sample=1000)
 
 
-def build_unfiltered_corpus(n_processes,sets_to_build):
+def build_unfiltered_corpus(n_processes,sets_to_build, source_dir, target_dir):
     sets_to_build_dict = {}
     if 'dev' in sets_to_build:
-        sets_to_build_dict['dev'] = join(TRIVIA_QA_UNFILTERED, "unfiltered-web-dev.json")
+        sets_to_build_dict['dev'] = join(source_dir, "unfiltered-web-dev.json")
     if 'train' in sets_to_build:
-        sets_to_build_dict['train'] = join(TRIVIA_QA_UNFILTERED, "unfiltered-web-train.json")
+        sets_to_build_dict['train'] = join(source_dir, "unfiltered-web-train.json")
     if 'test' in sets_to_build:
-        sets_to_build_dict['test'] = join(TRIVIA_QA_UNFILTERED, "unfiltered-web-test-without-answers.json")
+        sets_to_build_dict['test'] = join(source_dir, "unfiltered-web-test-without-answers.json")
 
     build_dataset("web-open", NltkAndPunctTokenizer(),
                   sets_to_build_dict,
                   answer_detector=FastNormalizedAnswerDetector(),
-                  n_process=n_processes)
+                  n_process=n_processes,
+                  out_dir=target_dir)
 
 
 def main():
     parser = argparse.ArgumentParser("Pre-procsess TriviaQA data")
     parser.add_argument("corpus", choices=["web", "wiki", "web-open"])
     parser.add_argument("-n", "--n_processes", type=int, default=1, help="Number of processes to use")
-    parser.add_argument("-s", "--sets_to_build", type=str, default='dev,train', help="which sets to build dev,train,test")
+    parser.add_argument("-w", "--sets_to_build", type=str, default='dev,train', help="which sets to build dev,train,test")
+    parser.add_argument("-s", "--source_dir", type=str, default=TRIVIA_QA_UNFILTERED,
+                        help="where to take input files")
+    parser.add_argument("-t", "--target_dir", type=str, default=None,
+                        help="where to put output files")
+
     args = parser.parse_args()
     if args.corpus == "web":
         build_web_corpus(args.n_processes)
     elif args.corpus == "wiki":
         build_wiki_corpus(args.n_processes)
     elif args.corpus == "web-open":
-        build_unfiltered_corpus(args.n_processes,args.sets_to_build.split(','))
+        build_unfiltered_corpus(args.n_processes, args.sets_to_build.split(','), \
+                                source_dir=args.source_dir,target_dir=args.target_dir)
     else:
         raise RuntimeError()
 

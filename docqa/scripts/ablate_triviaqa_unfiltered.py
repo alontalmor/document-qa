@@ -28,6 +28,8 @@ def main():
                         help="Number of processes (i.e., select which paragraphs to train on) "
                              "the data with"
                         )
+    parser.add_argument("-s", "--source_dir", type=str, default=None,
+                        help="where to take input files")
     args = parser.parse_args()
     mode = args.mode
 
@@ -58,7 +60,7 @@ def main():
         test = RandomParagraphSetDatasetBuilder(120, "merge" if mode == "merge" else "group", True, oversample)
         train = StratifyParagraphSetsBuilder(30, mode == "merge", True, oversample)
 
-    data = TriviaQaOpenDataset()
+    data = TriviaQaOpenDataset(args.source_dir)
 
     params = TrainParams(
         SerializableOptimizer("Adadelta", dict(learning_rate=1)),

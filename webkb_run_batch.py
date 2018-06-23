@@ -29,15 +29,14 @@ import signal
 from nltk.metrics import *
 from nltk import pos_tag, word_tokenize
 from nltk.corpus import stopwords
-from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED
+from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED, CORPUS_DIR
+from os.path import relpath, join, exists
 
 
 parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
 parser.add_argument('-m', '--model',
                         default="../../models-cpu/triviaqa-web-shared-norm")
 args = parser.parse_args()
-
-
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -93,9 +92,12 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
     triviaqa_dict['Version'] = 1.0
 
     # deleting prev evidence (only one at a time)
+    if not os.path.isdir(TRIVIA_QA +'/evidence/batch_run'):
+        os.mkdir(TRIVIA_QA + 'evidence/batch_run')
+
     if DELETE_PREV_EVIDENCE:
-        shutil.rmtree(TRIVIA_QA + '/evidence/web/')
-        os.mkdir(TRIVIA_QA + '/evidence/web')
+        shutil.rmtree(TRIVIA_QA + '/evidence/batch_run/')
+        os.mkdir(TRIVIA_QA + '/evidence/batch_run')
 
     # create a query to file map
     WRITE_EVIDENCE = True
@@ -110,10 +112,10 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
         google_results = question['SearchResults']
         train_file_ind += 1
 
-        if WRITE_EVIDENCE and not os.path.isdir(TRIVIA_QA + '/evidence/web/' + str(int(train_file_ind / 100))):
-            os.mkdir(TRIVIA_QA + '/evidence/web/' + str(int(train_file_ind / 100)))
+        if WRITE_EVIDENCE and not os.path.isdir(TRIVIA_QA + '/evidence/batch_run/' + str(int(train_file_ind / 100))):
+            os.mkdir(TRIVIA_QA + '/evidence/batch_run/' + str(int(train_file_ind / 100)))
             if train_file_ind % 1000 == 0:
-                print('evidence/web/' + str(int(train_file_ind / 100)))
+                print('evidence/batch_run/' + str(int(train_file_ind / 100)))
 
         for ind, g in enumerate(google_results):
             file_ind = file_ind % 10
@@ -134,7 +136,7 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
         # saving files
         if WRITE_EVIDENCE:
             for file_str, file_name in zip(files, filenames):
-                with open(TRIVIA_QA + '/evidence/web/' + file_name, 'w') as outfile:
+                with open(TRIVIA_QA + '/evidence/batch_run/' + file_name, 'w') as outfile:
                     outfile.write(file_str)
 
         questions_triviaqa_format.at[questionID, 'SearchResults'] = SearchResults
@@ -167,20 +169,24 @@ while True:
             # moving the file to backup
 
 
-
             print('building traivia qa evidence from google results')
             build_evidence(google_results)
 
-            # running evidence_corpus (This builds evidence)
-            wa_proc = call('python ../triviaqa/evidence_corpus.py --n_processes 8'\
-                            , shell=True, preexec_fn=os.setsid)
+            print('running evidence_corpus')
+            wa_proc = call('python docqa/triviaqa/evidence_corpus.py --n_processes 8 --source ' + \
+                           join(TRIVIA_QA, "evidence", 'batch_run') + ' --output_dir ' + \
+                           join(CORPUS_DIR, "triviaqa", "evidence", "web", 'batch_run'), shell=True,
+                           preexec_fn=os.setsid)
 
             # running build_span_corpus.py
-            wa_proc = call('python ../triviaqa/build_span_corpus.py web-open --n_processes 8', shell=True,
-                            preexec_fn=os.setsid)
+            source_dir = join(TRIVIA_QA_UNFILTERED, 'batch_run')
+            target_dir = join(CORPUS_DIR, "triviaqa", "web-open", 'batch_run')
+            print('running build_span_corpus')
+            call('python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 --source_dir ' + source_dir \
+                 + ' --target_dir ' + target_dir, shell=True, preexec_fn=os.setsid)
 
             # running the docqa evaluation
-            wa_proc = call('python ../eval/triviaqa_full_document_eval.py --n_processes 8 --n_paragraphs 100  -c open-dev --tokens 800  ' + args.model, shell=True,
+            wa_proc = call('python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 --n_paragraphs 100  -c open-dev --tokens 800  ' + args.model, shell=True,
                             preexec_fn=os.setsid)
 
             # storing results
