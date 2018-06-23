@@ -52,9 +52,11 @@ args = parser.parse_args()
 # (evidence/web/exp_name/0 ... )
 if args.build_evidence:
     print('running evidence_corpus')
-    call('python docqa/triviaqa/evidence_corpus.py --n_processes 8 --source ' + \
+    command = 'python docqa/triviaqa/evidence_corpus.py --n_processes 8 --source ' + \
                    join(TRIVIA_QA, "evidence",args.exp_name) + ' --output_dir ' + \
-                   join(CORPUS_DIR, "triviaqa", "evidence","web", args.exp_name) , shell=True, preexec_fn=os.setsid)
+                   join(CORPUS_DIR, "triviaqa", "evidence","web", args.exp_name)
+    print(command)
+    call(command , shell=True, preexec_fn=os.setsid)
 
 # running build_span_corpus.py
 source_dir = join(TRIVIA_QA_UNFILTERED, args.exp_name)
@@ -62,11 +64,15 @@ target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.exp_name)
 print('running build_span_corpus')
 print(source_dir)
 print(target_dir)
-call('python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 --sets_to_build dev,train --source_dir ' + source_dir \
-               + ' --target_dir ' + target_dir, shell=True, preexec_fn=os.setsid)
+command = 'python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 --sets_to_build dev,train --source_dir ' + source_dir \
+               + ' --target_dir ' + target_dir
+print(command)
+call(command, shell=True, preexec_fn=os.setsid)
 
 # running the docqa evaluation
 source_dir = target_dir
 print('running ablate_triviaqa_unfiltered')
-call('python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + args.exp_name + \
-               ' --source_dir ' + source_dir, shell=True, preexec_fn=os.setsid)
+command = 'python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + args.exp_name + \
+               ' --source_dir ' + source_dir
+print(command)
+call(command, shell=True, preexec_fn=os.setsid)
