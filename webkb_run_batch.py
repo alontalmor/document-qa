@@ -32,10 +32,20 @@ from nltk.corpus import stopwords
 from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED, CORPUS_DIR
 from os.path import relpath, join, exists
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
 parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
 parser.add_argument('-m', '--model',
                         default="models-cpu/triviaqa-web-shared-norm")
+parser.add_argument('--full_evidence', type=str2bool, default=False, nargs='?', const=True , \
+                    help="should we add all evidence to SimpQA (300 results)?")
 args = parser.parse_args()
 
 def str2bool(v):
@@ -54,11 +64,22 @@ def enqueue_output(out,err,q):
     q.put('exit')
     out.close()
 
+def append_goog_results_for_SimpQA(questions):
+    #questions['google_results'] = questions['google_results'].astype(object)
+    for ind,simp_qa_question in questions[questions['SimpQA'].notnull()].iterrows():
+        search_results = []
+        for q_part in questions.loc[questions['ID'] == simp_qa_question['ID'], 'google_results'].tolist():
+            search_results += q_part
+
+        questions.at[ind,'google_results'] = search_results
+
 def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
 
     questions_triviaqa_format = pd.DataFrame()
     questions_triviaqa_format['QuestionId'] = questions.index.astype(str)
     questions_triviaqa_format['Question'] = questions['question']
+    if args.full_evidence:
+        append_goog_results_for_SimpQA(questions)
     questions_triviaqa_format['SearchResults'] = questions['google_results']
     questions_triviaqa_format['EntityPages'] = [[] for x in range(len(questions_triviaqa_format))]
     questions_triviaqa_format['QuestionSource'] = ''
@@ -118,7 +139,7 @@ def build_evidence(questions,DELETE_PREV_EVIDENCE = True):
                 print('evidence/batch_run/' + str(int(train_file_ind / 100)))
 
         for ind, g in enumerate(google_results):
-            file_ind = file_ind % 10
+            file_ind = file_ind % 30
             if len(files) <= file_ind:
                 file_name = 'batch_run/' + str(int(train_file_ind / 100)
                                 ) + "/" + questionID + '_' + str(file_ind) + '.txt'
