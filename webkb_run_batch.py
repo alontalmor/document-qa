@@ -68,8 +68,15 @@ def append_goog_results_for_SimpQA(questions):
     #questions['google_results'] = questions['google_results'].astype(object)
     for ind,simp_qa_question in questions[questions['SimpQA'].notnull()].iterrows():
         search_results = []
-        for q_part in questions.loc[questions['ID'] == simp_qa_question['ID'], 'google_results'].tolist():
-            search_results += q_part
+
+        answer_lists = questions.loc[questions['ID'] == simp_qa_question['ID'], 'google_results'].tolist()
+        for ind in range(100):
+            for list in answer_lists:
+                if len(list) > ind:
+                    search_results.append(list[ind])
+
+        #for q_part in questions.loc[questions['ID'] == simp_qa_question['ID'], 'google_results'].tolist():
+        #    search_results += q_part
 
         questions.at[ind,'google_results'] = search_results
 
