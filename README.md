@@ -113,6 +113,18 @@ the (trained) models to CPU versions:
 
 Modifying the hyper-parameters beyond the ablations requires building your own train script.
 
+
+#### TriviaQA Data and Training in one batch (Alon)
+
+Put the evidence in (unzipped)
+
+Put the TriviaQA dev,train set in (unzipped)
+
+Then run:
+
+`python build_evidence_and_train.py experiment_name`
+
+
 ## Testing
 ### SQuAD
 Use "docqa/eval/squad_eval.py" to evaluate on paragraph-level (i.e., standard) SQuAD. For example:
@@ -135,9 +147,9 @@ to get ranked scores as more paragraphs are used.
 
 
 ### TriviaQA
-Use "docqa/eval/triviaqa_full_document_eval.py" to evaluate on TriviaQA datasets, like:
+Use "docqa/eval/triviaqa_full_document_eval.py" to evaluate on TriviaQA datasets, with a specific experiement , like:
  
-`python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c web-dev --tokens 800 -o question-output.json -p paragraph-output.csv /path/to/model/directory`
+`python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c web-dev --tokens 800 -o question-output.json -p paragraph-output.csv /path/to/model/directory --source_dir /path/to/web-open/experiment/dir`
 
 Then the "question-output.json" can be used with the standard triviaqa evaluation [script](https://github.com/mandarjoshi90/triviaqa), 
 the "paragraph-output.csv" contains per-paragraph output, we can run  
