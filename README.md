@@ -103,7 +103,8 @@ to build the desired set. This builds pkl files "./data/triviaqa/{web|wiki|open}
 Please use ipython/build_triviaqa_evidence.ipynb ipython file to build new evidence
 
 train/dev data will be saved in output / experiment_name
-evidence will be stored in EVIDENCE_DIR in the ipython "Experiment config" section
+
+Evidence will be stored in EVIDENCE_DIR in the ipython "Experiment config" section
 
 
 ## Training
