@@ -114,13 +114,13 @@ the (trained) models to CPU versions:
 Modifying the hyper-parameters beyond the ablations requires building your own train script.
 
 
-## TriviaQA Data and Training in one batch (Alon)
+## TriviaQA Data pre-processing and Training in one batch (Alon)
 
-Put the evidence in (unzipped)
+Put the evidence data (all unzipped directories) in TRIVIA_QA / evidence / experiment_name
 
-Put the TriviaQA dev,train set in (unzipped)
+Put the TriviaQA dev,train data (unzipped) in TRIVIA_QA_UNFILTERED / experiment_name
 
-Then run:
+To pre-precess the data and train model please run:
 
 `python build_evidence_and_train.py experiment_name`
 
