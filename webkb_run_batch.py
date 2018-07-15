@@ -69,7 +69,7 @@ def append_goog_results_for_SimpQA(questions):
     if 'SimpQA' in questions:
         for ind,simp_qa_question in questions[questions['SimpQA'].notnull()].iterrows():
             search_results = []
-    
+
             answer_lists = questions.loc[questions['ID'] == simp_qa_question['ID'], 'google_results'].tolist()
             for ind in range(100):
                 for list in answer_lists:
@@ -194,8 +194,15 @@ while True:
         if entry.name.find('_done.json') > -1:
             print('fetching the next batch to work on')
             print('copying file to backup and backupdir : ' + entry.name )
-            md, res = dbx.files_download('/docqa/' + entry.name)
-            google_results = pd.DataFrame(json.loads(res.content))
+            dbx.files_download_to_file(entry.name, '/docqa/' + entry.name)
+
+            with zipfile.ZipFile(entry.name, 'r') as myzip:
+                with myzip.open(entry.name.replace('.zip','')) as myfile:
+                    google_results = pd.DataFrame(json.load(myfile))
+
+            os.remove(entry.name)
+
+            #google_results = pd.DataFrame(json.loads(res.content))
             # moving the file to backup
 
 
