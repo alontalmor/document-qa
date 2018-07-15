@@ -114,7 +114,7 @@ the (trained) models to CPU versions:
 Modifying the hyper-parameters beyond the ablations requires building your own train script.
 
 
-#### TriviaQA Data and Training in one batch (Alon)
+## TriviaQA Data and Training in one batch (Alon)
 
 Put the evidence in (unzipped)
 
