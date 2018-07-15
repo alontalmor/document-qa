@@ -1,4 +1,12 @@
 .idea
 __pycache__
 data
-out
+output
+models-cpu
+models-gpu
+docqa/eval/paragraph-output.csv
+docqa/eval/question-output.json
+docqa/eval/results.csv
+ipython/.ipynb_checkpoints/
+results.csv
+
