@@ -27,8 +27,9 @@ args = parser.parse_args()
 
 all_train_questions = []
 all_dev_questions = []
-all_filemaps= []
+all_filemaps= {}
 for dataset in args.datasets.split(','):
+    print('loading ' + dataset)
     source_dir = join(CORPUS_DIR, "triviaqa", "web-open", dataset)
 
     dataset = TriviaQaOpenDataset(source_dir)
@@ -37,14 +38,14 @@ for dataset in args.datasets.split(','):
     all_train_questions += dataset.get_train()
 
     with open(join(source_dir, "file_map.json"),'r') as f:
-        all_filemaps += json.load(f)
+        all_filemaps.update(json.load(f))
 
 if len(all_dev_questions) >= 8000:
     all_dev_questions = list(pd.Series(all_dev_questions).sample(n=8000))
 
 
 # Saving new training run:
-
+print('saving new files')
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.datasets.replace(',','__'))
 if not os.path.isdir(target_dir):
     os.mkdir(target_dir)
