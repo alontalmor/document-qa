@@ -1,37 +1,9 @@
 
-import pandas as pd
-import numpy as np
-pd.set_option('display.max_colwidth', 140)
-pd.set_option('display.width', 2000)
 import sys,os
-import nltk
-import io
-import json
-import time
-from pandas import ExcelWriter
-from ast import literal_eval
-import hashlib
-import unicodedata
-import subprocess
-import datetime
-m = hashlib.md5()
-import zipfile
-import random
-import requests
-from subprocess import PIPE, Popen, call
-import sys, traceback
-from threading  import Thread
-import time
-import dropbox
-import socket
-import shutil
-import argparse
-import signal
-from nltk.metrics import *
-from nltk import pos_tag, word_tokenize
-from nltk.corpus import stopwords
-from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED, CORPUS_DIR
 from os.path import relpath, join, exists
+from subprocess import PIPE, Popen, call
+import argparse
+from docqa.config import TRIVIA_QA, TRIVIA_QA_UNFILTERED, CORPUS_DIR
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -47,10 +19,10 @@ parser.add_argument('datasets')
 
 args = parser.parse_args()
 
-
+models_dir = join(CORPUS_DIR, "triviaqa", "web-open/")
 # running the docqa evaluation
-print('running triviaqa_full_document_eval')
-command = 'python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c open-dev --tokens 800 -o question-output.json -p paragraph-output.csv triviaqa_unfiltered_full-0719-211745 --source_dir /media/disk1/alont/document-qa/data/triviaqa/web-open/ ' + args.exp_name + \
-               ' --source_dir ' + source_dir
-print(command)
-call(command, shell=True, preexec_fn=os.setsid)
+for dataset in args.datasets.split(','):
+    print('running triviaqa_full_document_eval')
+    command = 'python ../docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c open-dev --tokens 800 -o question-output.json -p paragraph-output.csv ' + args.model + ' --source_dir ' + models_dir + dataset
+    print(command)
+    call(command, shell=True, preexec_fn=os.setsid)
