@@ -121,6 +121,10 @@ def main():
                         help="where to take input files")
     args = parser.parse_args()
 
+    dataset_name = args.source_dir.split('/')[-1]
+    model_name = args.model.split('/')[-1]
+    ElasticLogger().write_log('INFO', 'Start Evaluation', context_dict={'model': model_name, 'dataset': dataset_name})
+
     model_dir = ModelDir(args.model)
     model = model_dir.get_model()
 
