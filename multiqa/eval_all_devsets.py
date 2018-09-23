@@ -23,6 +23,6 @@ models_dir = join(CORPUS_DIR, "triviaqa", "web-open/")
 # running the docqa evaluation
 for dataset in args.datasets.split(','):
     print('running triviaqa_full_document_eval')
-    command = 'python ../docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c open-dev --tokens 800 -o question-output.json -p paragraph-output.csv ' + args.model + ' --source_dir ' + models_dir + dataset
+    command = 'python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c open-dev --tokens 800 -o question-output.json -p paragraph-output.csv ' + args.model + ' --source_dir ' + models_dir + dataset
     print(command)
     call(command, shell=True, preexec_fn=os.setsid)
