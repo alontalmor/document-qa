@@ -25,6 +25,7 @@ from docqa.triviaqa.training_data import DocumentParagraphQuestion, ExtractMulti
 from docqa.triviaqa.trivia_qa_eval import exact_match_score as trivia_em_score
 from docqa.triviaqa.trivia_qa_eval import f1_score as trivia_f1_score
 from docqa.utils import ResourceLoader, print_table
+from multiqa_infra.logger import ElasticLogger
 
 """
 Evaluate on TriviaQA data
@@ -146,6 +147,7 @@ def main():
     else:
         dataset = TriviaQaOpenDataset(args.source_dir)
         if args.corpus == "open-dev":
+            # just loading the pkl that was saved in build_span_corpus
             test_questions = dataset.get_dev()
         elif args.corpus == "open-train":
             test_questions = dataset.get_train()
@@ -299,6 +301,13 @@ def main():
     em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
     table = [["N Paragraphs", "EM", "F1"]]
     table += list([str(i+1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
+
+    table_df = pd.DataFrame(table[1:], columns=table[0]).drop(['N Paragraphs'], axis=1)
+    ElasticLogger().write_log('INFO', 'Results', context_dict={'model':args.model, 'source_dir':args.source_dir, \
+                                                            'max_EM':table_df.max().ix['EM'], \
+                                                            'max_F1':table_df.max().ix['F1'], \
+                                                            'result_table': str(table_df)})
+
     print_table(table)
 if __name__ == "__main__":
     main()
