@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-
+from os.path import isabs, join
 from docqa import model_dir
 from docqa import trainer
 from docqa.data_processing.document_splitter import MergeParagraphs, ShallowOpenWebRanker
@@ -15,6 +15,7 @@ from docqa.text_preprocessor import WithIndicators
 from docqa.trainer import SerializableOptimizer, TrainParams
 from docqa.triviaqa.build_span_corpus import TriviaQaOpenDataset
 from docqa.triviaqa.training_data import ExtractMultiParagraphsPerQuestion
+from multiqa_infra.logger import ElasticLogger
 
 
 def main():
@@ -33,7 +34,8 @@ def main():
     args = parser.parse_args()
     mode = args.mode
 
-    out = args.name + "-" + datetime.now().strftime("%m%d-%H%M%S")
+    #out = args.name + "-" + datetime.now().strftime("%m%d-%H%M%S")
+    out = join('models',args.name)
 
     model = get_model(100, 140, mode, WithIndicators())
 

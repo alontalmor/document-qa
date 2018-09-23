@@ -53,7 +53,7 @@ args = parser.parse_args()
 if args.build_evidence:
     print('running evidence_corpus')
     command = 'python docqa/triviaqa/evidence_corpus.py --n_processes 8 --source ' + \
-                   join(TRIVIA_QA, "evidence",args.exp_name) + ' --output_dir ' + \
+                   join(TRIVIA_QA, "multiqa_evidence",args.exp_name) + ' --output_dir ' + \
                    join(CORPUS_DIR, "triviaqa", "evidence","web", args.exp_name)
     print(command)
     call(command , shell=True, preexec_fn=os.setsid)
@@ -67,10 +67,18 @@ command = 'python docqa/triviaqa/build_span_corpus.py web-open --n_processes 8 -
 print(command)
 call(command, shell=True, preexec_fn=os.setsid)
 
-# running the docqa evaluation
+# running the docqa training
 source_dir = target_dir
 print('running ablate_triviaqa_unfiltered')
 command = 'python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + args.exp_name + \
+               ' --source_dir ' + source_dir
+print(command)
+call(command, shell=True, preexec_fn=os.setsid)
+
+# running the docqa evaluation
+source_dir = target_dir
+print('running triviaqa_full_document_eval')
+command = 'python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c open-dev --tokens 800 -o question-output.json -p paragraph-output.csv triviaqa_unfiltered_full-0719-211745 --source_dir /media/disk1/alont/document-qa/data/triviaqa/web-open/triviaqa_unfiltered_full ' + args.exp_name + \
                ' --source_dir ' + source_dir
 print(command)
 call(command, shell=True, preexec_fn=os.setsid)
