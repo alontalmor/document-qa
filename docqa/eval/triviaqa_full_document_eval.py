@@ -307,7 +307,7 @@ def main():
     table += list([str(i+1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
 
     table_df = pd.DataFrame(table[1:], columns=table[0]).drop(['N Paragraphs'], axis=1)
-    ElasticLogger().write_log('INFO', 'Results', context_dict={'model':args.model, 'source_dir':args.source_dir, \
+    ElasticLogger().write_log('INFO', 'Results', context_dict={'model': model_name, 'dataset': dataset_name, \
                                                             'max_EM':table_df.max().ix['EM'], \
                                                             'max_F1':table_df.max().ix['F1'], \
                                                             'result_table': str(table_df)})
