@@ -406,7 +406,7 @@ def _train(model: Model,
             evaluation = evaluator_runner.run_evaluators(sess, data, name, n_samples)
 
             print("Writing logs")
-            model_name = ModelDir.split('/')[-1]
+            model_name = ModelDir.dir.split('/')[-1]
             group_by = ["question_id"]
             df = pd.DataFrame(evaluation.per_sample)
             df.sort_values(group_by + ["rank"], inplace=True)
@@ -465,7 +465,7 @@ def _train(model: Model,
                     n_samples = train_params.eval_samples.get(name)
                     evaluation = evaluator_runner.run_evaluators(sess, data, name, n_samples)
                     print("Writing logs")
-                    model_name = ModelDir.split('/')[-1]
+                    model_name = ModelDir.dir.split('/')[-1]
                     group_by = ["question_id"]
                     df = pd.DataFrame(evaluation.per_sample)
                     df.sort_values(group_by + ["rank"], inplace=True)
@@ -653,7 +653,7 @@ def _train_async(model: Model,
                         evaluation = evaluator_runner.run_evaluators(sess, data, name, n_samples, eval_dict)
 
                         print("Writing logs")
-                        model_name = ModelDir.split('/')[-1]
+                        model_name = ModelDir.dir.split('/')[-1]
                         group_by = ["question_id"]
                         df = pd.DataFrame(evaluation.per_sample)
                         df.sort_values(group_by + ["rank"], inplace=True)
