@@ -656,6 +656,7 @@ def _train_async(model: Model,
                         model_name = out.dir.split('/')[-1]
                         group_by = ["question_id"]
                         df = pd.DataFrame(evaluation.per_sample)
+                        print(df)
                         df.sort_values(group_by + ["rank"], inplace=True)
                         f1 = compute_ranked_scores(df, "predicted_score", "text_f1", group_by)
                         em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
