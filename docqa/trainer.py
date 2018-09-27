@@ -657,17 +657,19 @@ def _train_async(model: Model,
                         group_by = ["question_id"]
                         df = pd.DataFrame(evaluation.per_sample)
                         print(df)
-                        df.sort_values(group_by + ["rank"], inplace=True)
-                        f1 = compute_ranked_scores(df, "predicted_score", "text_f1", group_by)
-                        em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
-                        table = [["N Paragraphs", "EM", "F1"]]
-                        table += list([str(i + 1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
-                        table_df = pd.DataFrame(table[1:], columns=table[0]).drop(['N Paragraphs'], axis=1)
-                        ElasticLogger().write_log('INFO', 'Training Eval', \
-                                                  context_dict={'step': on_step, 'model': model_name, \
-                                                                'max_EM': table_df.max().ix['EM'], \
-                                                                'max_F1': table_df.max().ix['F1'], \
-                                                                'result_table': str(table_df)})
+                        print(evaluation.scalars)
+                        if len(df)>0:
+                            df.sort_values(group_by + ["rank"], inplace=True)
+                            f1 = compute_ranked_scores(df, "predicted_score", "text_f1", group_by)
+                            em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
+                            table = [["N Paragraphs", "EM", "F1"]]
+                            table += list([str(i + 1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
+                            table_df = pd.DataFrame(table[1:], columns=table[0]).drop(['N Paragraphs'], axis=1)
+                            ElasticLogger().write_log('INFO', 'Training Eval', \
+                                                      context_dict={'step': on_step, 'model': model_name, \
+                                                                    'max_EM': table_df.max().ix['EM'], \
+                                                                    'max_F1': table_df.max().ix['F1'], \
+                                                                    'result_table': str(table_df)})
 
                         for s in evaluation.to_summaries(name + "-"):
                             summary_writer.add_summary(s, on_step)
