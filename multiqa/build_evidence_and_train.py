@@ -45,6 +45,8 @@ parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data'
 parser.add_argument('exp_name',default="test")
 parser.add_argument('--build_evidence', type=str2bool, default=True, nargs='?', const=True , \
                     help="should we build the evidence as well?")
+parser.add_argument('--perform_training', type=str2bool, default=True, nargs='?', const=True , \
+                    help="should we build the evidence as well?")
 args = parser.parse_args()
 
 # running evidence_corpus (This builds evidence)
@@ -68,17 +70,11 @@ print(command)
 call(command, shell=True, preexec_fn=os.setsid)
 
 # running the docqa training
-source_dir = target_dir
-print('running ablate_triviaqa_unfiltered')
-command = 'python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + args.exp_name + \
-               ' --source_dir ' + source_dir
-print(command)
-call(command, shell=True, preexec_fn=os.setsid)
+if args.perform_training:
+    source_dir = target_dir
+    print('running ablate_triviaqa_unfiltered')
+    command = 'python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + args.exp_name + \
+                   ' --source_dir ' + source_dir
+    print(command)
+    call(command, shell=True, preexec_fn=os.setsid)
 
-# running the docqa evaluation
-source_dir = target_dir
-print('running triviaqa_full_document_eval')
-command = 'python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 -c open-dev --tokens 800 -o question-output.json -p paragraph-output.csv triviaqa_unfiltered_full-0719-211745 --source_dir /media/disk1/alont/document-qa/data/triviaqa/web-open/triviaqa_unfiltered_full ' + args.exp_name + \
-               ' --source_dir ' + source_dir
-print(command)
-call(command, shell=True, preexec_fn=os.setsid)

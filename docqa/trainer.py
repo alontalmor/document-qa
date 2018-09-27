@@ -404,6 +404,23 @@ def _train(model: Model,
         for name, data in eval_datasets.items():
             n_samples = train_params.eval_samples.get(name)
             evaluation = evaluator_runner.run_evaluators(sess, data, name, n_samples)
+
+            print("Writing logs")
+            model_name = ModelDir.split('/')[-1]
+            group_by = ["question_id"]
+            df = pd.DataFrame(evaluation.per_sample)
+            df.sort_values(group_by + ["rank"], inplace=True)
+            f1 = compute_ranked_scores(df, "predicted_score", "text_f1", group_by)
+            em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
+            table = [["N Paragraphs", "EM", "F1"]]
+            table += list([str(i + 1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
+            table_df = pd.DataFrame(table[1:], columns=table[0]).drop(['N Paragraphs'], axis=1)
+            ElasticLogger().write_log('INFO', 'Training Eval', \
+                  context_dict={'step': on_step, 'model': model_name, \
+                                'max_EM': table_df.max().ix['EM'], \
+                                'max_F1': table_df.max().ix['F1'], \
+                                'result_table': str(table_df)})
+
             for s in evaluation.to_summaries(name + "-"):
                 summary_writer.add_summary(s, on_step)
 
@@ -634,6 +651,23 @@ def _train_async(model: Model,
                     for name, data in eval_datasets.items():
                         n_samples = train_params.eval_samples.get(name)
                         evaluation = evaluator_runner.run_evaluators(sess, data, name, n_samples, eval_dict)
+
+                        print("Writing logs")
+                        model_name = ModelDir.split('/')[-1]
+                        group_by = ["question_id"]
+                        df = pd.DataFrame(evaluation.per_sample)
+                        df.sort_values(group_by + ["rank"], inplace=True)
+                        f1 = compute_ranked_scores(df, "predicted_score", "text_f1", group_by)
+                        em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
+                        table = [["N Paragraphs", "EM", "F1"]]
+                        table += list([str(i + 1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
+                        table_df = pd.DataFrame(table[1:], columns=table[0]).drop(['N Paragraphs'], axis=1)
+                        ElasticLogger().write_log('INFO', 'Training Eval', \
+                                                  context_dict={'step': on_step, 'model': model_name, \
+                                                                'max_EM': table_df.max().ix['EM'], \
+                                                                'max_F1': table_df.max().ix['F1'], \
+                                                                'result_table': str(table_df)})
+
                         for s in evaluation.to_summaries(name + "-"):
                             summary_writer.add_summary(s, on_step)
 
