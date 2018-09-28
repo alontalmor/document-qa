@@ -37,7 +37,7 @@ call(command , shell=True, preexec_fn=os.setsid)
 model_name = args.datasets.replace(',','__')
 source_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 print('running ablate_triviaqa_unfiltered')
-command = 'CUDA_VISIBLE_DEVICES=' + args.GPU + '; python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + model_name + \
+command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + model_name + \
                ' --source_dir ' + source_dir
 print(command)
 call(command, shell=True, preexec_fn=os.setsid)
@@ -45,6 +45,6 @@ call(command, shell=True, preexec_fn=os.setsid)
 # running the docqa evaluation
 source_dir = target_dir
 print('running triviaqa_full_document_eval')
-command = 'CUDA_VISIBLE_DEVICES=' + args.GPU + '; python multiqa/eval_all_devsets.py models/' + model_name + ' Squad-G,CompWebQ-G,MSMARCO-G,Squad-O,TriviaQA-G'
+command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python multiqa/eval_all_devsets.py models/' + model_name + ' Squad-G,CompWebQ-G,MSMARCO-G,Squad-O,TriviaQA-G'
 print(command)
 call(command, shell=True, preexec_fn=os.setsid)

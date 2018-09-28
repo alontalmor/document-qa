@@ -656,7 +656,7 @@ def _train_async(model: Model,
                         model_name = out.dir.split('/')[-1]
                         print(evaluation.scalars)
                         ElasticLogger().write_log('INFO', 'Training Eval', \
-                                                  context_dict={'epoch':epoch,'step': on_step, 'model': model_name, \
+                                                  context_dict={'epoch':int(epoch),'step': int(on_step), 'model': model_name, \
                                                      'loss': evaluation.scalars['loss'], \
                                                      'b8/question-text-em': evaluation.scalars['loss'], \
                                                      'b8/text-em-k-tau': evaluation.scalars['b8/text-em-k-tau'], \
