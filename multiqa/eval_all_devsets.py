@@ -22,7 +22,7 @@ args = parser.parse_args()
 models_dir = join(CORPUS_DIR, "triviaqa", "web-open/")
 # running the docqa evaluation
 for dataset in args.datasets.split(','):
-    if args.model == '*':
+    if args.model == 'ALL':
         for dirname, dirnames, filenames in os.walk(models_dir):
             for filename in filenames:
                 print('running triviaqa_full_document_eval')
