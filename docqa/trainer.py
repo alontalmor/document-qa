@@ -271,7 +271,7 @@ def start_training(
     # Else we assume the model has already completed its first phase of initialization
 
     if not dry_run:
-        init(out, model, False)
+        init(out, model, True)
 
     _train(model, data, None, initialize_from,
            True, train_params, evaluators, out, notes, dry_run)
@@ -657,12 +657,12 @@ def _train_async(model: Model,
                         print(evaluation.scalars)
                         ElasticLogger().write_log('INFO', 'Training Eval', \
                                                   context_dict={'epoch':int(epoch),'step': int(on_step), 'model': model_name, \
-                                                     'loss': evaluation.scalars['loss'], \
-                                                     'b8/question-text-em': evaluation.scalars['loss'], \
-                                                     'b8/text-em-k-tau': evaluation.scalars['b8/text-em-k-tau'], \
-                                                     'b8/text-f1-k-tau':evaluation.scalars['b8/text-f1-k-tau'], \
-                                                     'b8/paragraph-text-em': evaluation.scalars['b8/paragraph-text-em'], \
-                                                     'b8/paragraph-text-f1': evaluation.scalars['b8/paragraph-text-f1']})
+                                                     'loss': float(evaluation.scalars['loss']), \
+                                                     'b8/question-text-em': float(evaluation.scalars['loss']), \
+                                                     'b8/text-em-k-tau': float(evaluation.scalars['b8/text-em-k-tau']), \
+                                                     'b8/text-f1-k-tau':float(evaluation.scalars['b8/text-f1-k-tau']), \
+                                                     'b8/paragraph-text-em': float(evaluation.scalars['b8/paragraph-text-em']), \
+                                                     'b8/paragraph-text-f1': float(evaluation.scalars['b8/paragraph-text-f1'])})
 
                         for s in evaluation.to_summaries(name + "-"):
                             summary_writer.add_summary(s, on_step)
