@@ -1,6 +1,7 @@
 import datetime
 from elasticsearch import Elasticsearch
 global logger
+import traceback
 
 class ElasticLogger:
     """ A python singleton """
@@ -66,6 +67,7 @@ class ElasticLogger:
                         print("error writing logs!!")
             except:
                 print("log failed!!!!!!!!!!!!!!!!")
+                print(traceback.format_exc())
 
     # storage for the instance reference
     __instance = None
