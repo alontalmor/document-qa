@@ -26,7 +26,15 @@ parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
 args = parser.parse_args()
 
-target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.datasets.replace(',','__'))
+if args.sample_first<1.0:
+    datasets = args.datasets.split(',')
+    datasets[0] += '_' + str(args.sample_first).replace('.','')
+    model_name = '__'.join(datasets)
+else:
+    model_name = args.datasets.replace(',','__')
+
+
+target_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 
 print('creating mixed training')
 command = 'python multiqa/create_mixed_training.py ' + args.datasets + ' --sample_first ' + str(args.sample_first)
@@ -36,7 +44,7 @@ call(command , shell=True, preexec_fn=os.setsid)
 # running build_span_corpus.py
 
 # running the docqa training
-model_name = args.datasets.replace(',','__')
+
 source_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 print('running ablate_triviaqa_unfiltered')
 command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + model_name + \
