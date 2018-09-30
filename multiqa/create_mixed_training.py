@@ -26,6 +26,13 @@ parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
 args = parser.parse_args()
 
+if args.sample_first<1.0:
+    datasets = args.datasets.split(',')
+    datasets[0] += '_' + str(args.sample_first).replace('.','')
+    model_name = '__'.join(datasets)
+else:
+    model_name = args.datasets.replace(',','__')
+
 
 all_train_questions = []
 all_dev_questions = []
@@ -54,7 +61,7 @@ all_train_questions = list(pd.Series(all_train_questions).sample(frac=1))
 
 # Saving new training run:
 print('saving new files')
-target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.datasets.replace(',','__'))
+target_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 if not os.path.isdir(target_dir):
     os.mkdir(target_dir)
 
