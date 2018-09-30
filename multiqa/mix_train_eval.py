@@ -29,7 +29,7 @@ args = parser.parse_args()
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.datasets.replace(',','__'))
 
 print('creating mixed training')
-command = 'python multiqa/create_mixed_training.py ' + args.datasets + ' --sample_first ' + args.sample_first
+command = 'python multiqa/create_mixed_training.py ' + args.datasets + ' --sample_first ' + str(args.sample_first)
 print(command)
 call(command , shell=True, preexec_fn=os.setsid)
 
