@@ -22,26 +22,34 @@ def str2bool(v):
 
 parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
 parser.add_argument('datasets')
+parser.add_argument("--sample_first", type=float, default=1.0,
+                        help="Percentage to sample first dataset")
 args = parser.parse_args()
 
 
 all_train_questions = []
 all_dev_questions = []
 all_filemaps= {}
-for dataset in args.datasets.split(','):
+for ind,dataset in enumerate(args.datasets.split(',')):
     print('loading ' + dataset)
     source_dir = join(CORPUS_DIR, "triviaqa", "web-open", dataset)
 
     dataset = TriviaQaOpenDataset(source_dir)
     # just loading the pkl that was saved in build_span_corpus
     all_dev_questions += dataset.get_dev()
-    all_train_questions += dataset.get_train()
+    if args.sample_first<1.0:
+        all_train_questions += list(pd.Series(dataset.get_train()).sample(frac=args.sample_first))
+    else:
+        all_train_questions += dataset.get_train()
 
     with open(join(source_dir, "file_map.json"),'r') as f:
         all_filemaps.update(json.load(f))
 
 if len(all_dev_questions) >= 8000:
     all_dev_questions = list(pd.Series(all_dev_questions).sample(n=8000))
+
+# randomizing
+all_train_questions = list(pd.Series(all_train_questions).sample(frac=1))
 
 
 # Saving new training run:
