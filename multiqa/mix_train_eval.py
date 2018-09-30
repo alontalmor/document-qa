@@ -22,12 +22,14 @@ def str2bool(v):
 parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data')
 parser.add_argument('datasets')
 parser.add_argument('GPU')
+parser.add_argument("--sample_first", type=float, default=1.0,
+                        help="Percentage to sample first dataset")
 args = parser.parse_args()
 
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", args.datasets.replace(',','__'))
 
 print('creating mixed training')
-command = 'python multiqa/create_mixed_training.py ' + args.datasets
+command = 'python multiqa/create_mixed_training.py ' + args.datasets + ' --sample_first ' + args.sample_first
 print(command)
 call(command , shell=True, preexec_fn=os.setsid)
 
