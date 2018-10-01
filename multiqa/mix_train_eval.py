@@ -40,7 +40,7 @@ target_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 
 print('creating mixed training')
 command = 'python multiqa/create_mixed_training.py ' + args.datasets + ' --sample_first ' + str(args.sample_first) + \
-+ ' --limit_train_size ' + str(args.limit_train_size)
+    ' --limit_train_size ' + str(args.limit_train_size)
 print(command)
 call(command , shell=True, preexec_fn=os.setsid)
 
