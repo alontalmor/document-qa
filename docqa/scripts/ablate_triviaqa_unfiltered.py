@@ -66,7 +66,7 @@ def main():
 
     params = TrainParams(
         SerializableOptimizer("Adadelta", dict(learning_rate=1)),
-        num_epochs=n_epochs, ema=0.999, max_checkpoints_to_keep=2,
+        num_epochs=n_epochs,num_of_steps=220000, ema=0.999, max_checkpoints_to_keep=2,
         async_encoding=10, log_period=30, eval_period=1800, save_period=1800,
         eval_samples=dict(dev=None, train=6000)
     )

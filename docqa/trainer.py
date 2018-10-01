@@ -85,6 +85,7 @@ class TrainParams(Configurable):
     def __init__(self,
                  opt: SerializableOptimizer,
                  num_epochs: int,
+                 num_of_steps: int,
                  eval_period: int,
                  log_period: int,
                  save_period: int,
@@ -101,6 +102,7 @@ class TrainParams(Configurable):
         """
         :param opt: Optimizer to use
         :param num_epochs: Number of epochs to train for
+        :param num_of_steps: Max number of steps to train on
         :param eval_period: How many batches to train on between evaluations
         :param log_period: How many batches to train on between logging
         :param save_period: How many batches to train on between checkpointing
@@ -123,6 +125,7 @@ class TrainParams(Configurable):
         self.loss_ema = loss_ema
         self.monitor_ema = monitor_ema
         self.num_epochs = num_epochs
+        self.num_of_steps = num_of_steps
         self.eval_period = eval_period
         self.log_period = log_period
         self.save_period = save_period
@@ -608,6 +611,7 @@ def _train_async(model: Model,
     print("Start training!")
 
     batch_time = 0
+    on_step = 0
 
     train_dict = {is_train: True}
     eval_dict = {is_train: False}
@@ -615,9 +619,14 @@ def _train_async(model: Model,
         train_enqueue_thread.start()
 
         for epoch in range(train_params.num_epochs):
+            # Alon - adding a number of steps limit as well (some datasets are very large)
+            if on_step > train_params.num_of_steps:
+                break
+
             for batch_ix in range(len(train)):
                 t0 = time.perf_counter()
                 on_step = sess.run(global_step) + 1
+
                 get_summary = on_step % train_params.log_period == 0
 
                 if get_summary:
@@ -678,6 +687,7 @@ def _train_async(model: Model,
 
                     print("Evaluation took: %.3f seconds" % (time.perf_counter() - t0))
     finally:
+        print('Closing Session')
         sess.run(train_close)  # terminates the enqueue thread with an exception
 
     train_enqueue_thread.join()
