@@ -35,6 +35,9 @@ if args.sample_first<1.0:
 else:
     model_name = args.datasets.replace(',','__')
 
+if args.limit_train_size!=0:
+    model_name += '___' + str(args.limit_train_size)
+
 
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 
