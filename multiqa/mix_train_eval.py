@@ -24,6 +24,8 @@ parser.add_argument('datasets')
 parser.add_argument('GPU')
 parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
+parser.add_argument("--limit_train_size", type=int, default=0,
+                        help="Sample only this amount from training")
 args = parser.parse_args()
 
 if args.sample_first<1.0:
@@ -37,7 +39,8 @@ else:
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 
 print('creating mixed training')
-command = 'python multiqa/create_mixed_training.py ' + args.datasets + ' --sample_first ' + str(args.sample_first)
+command = 'python multiqa/create_mixed_training.py ' + args.datasets + ' --sample_first ' + str(args.sample_first) + \
++ ' --limit_train_size ' + str(args.limit_train_size)
 print(command)
 call(command , shell=True, preexec_fn=os.setsid)
 

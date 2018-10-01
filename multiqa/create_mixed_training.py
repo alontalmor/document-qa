@@ -24,6 +24,8 @@ parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data'
 parser.add_argument('datasets')
 parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
+parser.add_argument("--limit_train_size", type=int, default=0,
+                        help="Sample only this amount from training")
 args = parser.parse_args()
 
 if args.sample_first<1.0:
@@ -57,6 +59,9 @@ if len(all_dev_questions) >= 8000:
 
 # randomizing
 all_train_questions = list(pd.Series(all_train_questions).sample(frac=1))
+
+if args.limit_train_size!=0:
+    all_train_questions = list(pd.Series(all_train_questions).sample(n=args.limit_train_size))
 
 
 # Saving new training run:
