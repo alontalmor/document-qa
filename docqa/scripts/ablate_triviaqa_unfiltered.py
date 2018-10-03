@@ -37,7 +37,7 @@ def main():
     #out = args.name + "-" + datetime.now().strftime("%m%d-%H%M%S")
     out = join('models',args.name)
 
-    model = get_model(100, 140, mode, WithIndicators())
+    model = get_model(100, 170, mode, WithIndicators())
 
     extract = ExtractMultiParagraphsPerQuestion(MergeParagraphs(args.n_tokens), ShallowOpenWebRanker(16),
                                                 model.preprocessor, intern=True)
@@ -64,11 +64,11 @@ def main():
 
     data = TriviaQaOpenDataset(args.source_dir)
 
-    #async_encoding = 10
-    async_encoding = 0
+    async_encoding = 10
+    #async_encoding = 0
     params = TrainParams(
         SerializableOptimizer("Adadelta", dict(learning_rate=1)),
-        num_epochs=n_epochs,num_of_steps=300000, ema=0.999, max_checkpoints_to_keep=2,
+        num_epochs=n_epochs,num_of_steps=350000, ema=0.999, max_checkpoints_to_keep=2,
         async_encoding=async_encoding, log_period=30, eval_period=1800, save_period=1800,
         eval_samples=dict(dev=None, train=6000)
     )
