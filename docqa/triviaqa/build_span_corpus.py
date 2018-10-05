@@ -157,7 +157,7 @@ def build_web_corpus(n_processes):
                   ),
                   FastNormalizedAnswerDetector(), n_processes)
 
- ß
+
 def build_sample_corpus(n_processes):
     build_dataset("web-sample", NltkAndPunctTokenizer(),
                   dict(
