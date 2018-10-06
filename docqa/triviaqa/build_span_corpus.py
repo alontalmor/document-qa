@@ -147,15 +147,28 @@ def build_wiki_corpus(n_processes):
                   FastNormalizedAnswerDetector(), n_processes)
 
 
-def build_web_corpus(n_processes):
+def build_web_corpus(n_processes,sets_to_build, source_dir, target_dir):
+    sets_to_build_dict = {}
+    if 'verified' in sets_to_build:
+        sets_to_build_dict['verified'] = join(source_dir, "verified-web-dev.json")
+    if 'dev' in sets_to_build:
+        sets_to_build_dict['dev'] = join(source_dir, "web-dev.json")
+    if 'train' in sets_to_build:
+        sets_to_build_dict['train'] = join(source_dir, "web-train.json")
+    if 'test' in sets_to_build:
+        sets_to_build_dict['test'] = join(source_dir, "web-test-without-answers.json")
+
+    #dict(
+    #    verified=join(TRIVIA_QA, "qa", "verified-web-dev.json"),
+    #    dev=join(TRIVIA_QA, "qa", "web-dev.json"),
+    #    train=join(TRIVIA_QA, "qa", "web-train.json"),
+    #    test=join(TRIVIA_QA, "qa", "web-test-without-answers.json")
+    #)
+
     build_dataset("web", NltkAndPunctTokenizer(),
-                  dict(
-                      verified=join(TRIVIA_QA, "qa", "verified-web-dev.json"),
-                      dev=join(TRIVIA_QA, "qa", "web-dev.json"),
-                      train=join(TRIVIA_QA, "qa", "web-train.json"),
-                      test=join(TRIVIA_QA, "qa", "web-test-without-answers.json")
-                  ),
-                  FastNormalizedAnswerDetector(), n_processes)
+                  sets_to_build_dict,
+                  FastNormalizedAnswerDetector(), n_processes,
+                  out_dir=target_dir)
 
 
 def build_sample_corpus(n_processes):
@@ -195,7 +208,8 @@ def main():
 
     args = parser.parse_args()
     if args.corpus == "web":
-        build_web_corpus(args.n_processes)
+        build_unfiltered_corpus(args.n_processes, args.sets_to_build.split(','), \
+                                source_dir=args.source_dir, target_dir=args.target_dir)
     elif args.corpus == "wiki":
         build_wiki_corpus(args.n_processes)
     elif args.corpus == "web-open":
