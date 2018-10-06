@@ -275,6 +275,8 @@ def main():
                     true_name = filename[4:] + ".txt"
                 else:
                     true_name = fns[(q_id, filename)]
+                # Alon Patch for triviaqa test results
+                true_name = true_name.replace('TriviaQA_Org/','')
                 key = q_id + "--" + true_name
             else:
                 key = q_id
