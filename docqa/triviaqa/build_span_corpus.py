@@ -208,7 +208,7 @@ def main():
 
     args = parser.parse_args()
     if args.corpus == "web":
-        build_unfiltered_corpus(args.n_processes, args.sets_to_build.split(','), \
+        build_web_corpus(args.n_processes, args.sets_to_build.split(','), \
                                 source_dir=args.source_dir, target_dir=args.target_dir)
     elif args.corpus == "wiki":
         build_wiki_corpus(args.n_processes)
