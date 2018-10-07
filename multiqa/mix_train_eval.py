@@ -61,6 +61,6 @@ call(command, shell=True, preexec_fn=os.setsid)
 # running the docqa evaluation
 source_dir = target_dir
 print('running triviaqa_full_document_eval')
-command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python multiqa/eval_all_devsets.py models/' + model_name + ' CompWebQ-G,MSMARCO-G,MSMARCO-O,Squad-G,Squad-O,TriviaQA-G'
+command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python multiqa/eval_all_devsets.py models/' + model_name + ' CompWebQ-G,MSMARCO-G,MSMARCO-O,Squad-G,Squad-O,TriviaQA-G,TriviaQA-O,WikiTableQ-G,ComQA-G'
 print(command)
 call(command, shell=True, preexec_fn=os.setsid)
