@@ -26,6 +26,12 @@ parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
 parser.add_argument("--limit_train_size", type=int, default=0,
                         help="Sample only this amount from training")
+parser.add_argument("--n_epochs", type=str, default=None,
+                        help="Max number of epoches to train on ")
+parser.add_argument("--char_th", type=str, default=None,
+                    help="char level embeddings")
+parser.add_argument("--hl_dim", type=str, default=None,
+                    help="hidden layer dim size")
 args = parser.parse_args()
 
 if args.sample_first<1.0:
@@ -55,6 +61,14 @@ source_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 print('running ablate_triviaqa_unfiltered')
 command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python docqa/scripts/ablate_triviaqa_unfiltered.py shared-norm ' + model_name + \
                ' --source_dir ' + source_dir
+
+if args.char_th is not None:
+    command += ' --char_th ' + str(args.char_t)
+if args.hl_dim is not None:
+    command += ' --hl_dim ' + str(args.hl_dim)
+if args.n_epochs is not None:
+    command += ' --n_epochs ' + str(args.n_epochs)
+
 print(command)
 call(command, shell=True, preexec_fn=os.setsid)
 
