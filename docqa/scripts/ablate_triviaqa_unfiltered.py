@@ -46,10 +46,12 @@ def main():
     char_th = 100
     hl_dim = 140
     if args.char_th is not None:
-        char_th = args.char_th
+        print(args.char_th)
+        char_th = int(args.char_th)
         out += '--th' + str(char_th)
     if args.hl_dim is not None:
-        hl_dim = args.n_epochs
+        print(args.hl_dim)
+        hl_dim = int(args.hl_dim)
         out += '--hl' + str(hl_dim)
 
     model = get_model(char_th, hl_dim, mode, WithIndicators())
