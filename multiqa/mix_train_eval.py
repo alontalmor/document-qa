@@ -45,6 +45,8 @@ if args.limit_train_size!=0:
     model_name += '___' + str(args.limit_train_size)
 
 
+
+
 target_dir = join(CORPUS_DIR, "triviaqa", "web-open", model_name)
 
 print('creating mixed training')
@@ -64,10 +66,13 @@ command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python docqa/scripts/ab
 
 if args.char_th is not None:
     command += ' --char_th ' + str(args.char_th)
+    model_name += '--' + str(args.char_th)
 if args.hl_dim is not None:
     command += ' --hl_dim ' + str(args.hl_dim)
+    model_name += '--' + str(args.hl_dim)
 if args.n_epochs is not None:
     command += ' --n_epochs ' + str(args.n_epochs)
+    model_name += '--' + str(args.n_epochs)
 
 print(command)
 call(command, shell=True, preexec_fn=os.setsid)
