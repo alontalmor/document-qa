@@ -319,6 +319,9 @@ class RandomParagraphSetDataset(Dataset):
             raise RuntimeError()
 
     def get_samples(self, n_examples):
+        ## ALON fix for sample datasets
+        if n_examples > len(self.questions):
+            n_examples = len(self.questions)
         questions = np.random.choice(self.questions, n_examples, replace=False)
         if self.mode == "flatten":
             n_batches = self.batcher.epoch_size(sum(min(len(q.paragraphs), self.n_paragraphs) for q in questions))
