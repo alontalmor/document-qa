@@ -63,7 +63,7 @@ command = 'export CUDA_VISIBLE_DEVICES=' + args.GPU + '; python docqa/scripts/ab
                ' --source_dir ' + source_dir
 
 if args.char_th is not None:
-    command += ' --char_th ' + str(args.char_t)
+    command += ' --char_th ' + str(args.char_th)
 if args.hl_dim is not None:
     command += ' --hl_dim ' + str(args.hl_dim)
 if args.n_epochs is not None:
