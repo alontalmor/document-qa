@@ -31,13 +31,28 @@ def main():
                         )
     parser.add_argument("-s", "--source_dir", type=str, default=None,
                         help="where to take input files")
+    parser.add_argument("--n_epochs", type=str, default=None,
+                        help="Max number of epoches to train on ")
+    parser.add_argument("--char_th", type=str, default=None,
+                        help="char level embeddings")
+    parser.add_argument("--hl_dim", type=str, default=None,
+                        help="hidden layer dim size")
     args = parser.parse_args()
     mode = args.mode
 
     #out = args.name + "-" + datetime.now().strftime("%m%d-%H%M%S")
     out = join('models',args.name)
 
-    model = get_model(100, 140, mode, WithIndicators())
+    char_th = 100
+    hl_dim = 140
+    if args.char_th is not None:
+        char_th = args.char_th
+        out += '--th' + str(char_th)
+    if args.hl_dim is not None:
+        hl_dim = args.n_epochs
+        out += '--hl' + str(hl_dim)
+
+    model = get_model(char_th, hl_dim, mode, WithIndicators())
 
     extract = ExtractMultiParagraphsPerQuestion(MergeParagraphs(args.n_tokens), ShallowOpenWebRanker(16),
                                                 model.preprocessor, intern=True)
@@ -61,6 +76,11 @@ def main():
         n_epochs = 80
         test = RandomParagraphSetDatasetBuilder(120, "merge" if mode == "merge" else "group", True, oversample)
         train = StratifyParagraphSetsBuilder(30, mode == "merge", True, oversample)
+
+    if args.n_epochs is not None:
+        n_epochs = args.n_epochs
+        out += '--' + str(n_epochs)
+
 
     data = TriviaQaOpenDataset(args.source_dir)
 
