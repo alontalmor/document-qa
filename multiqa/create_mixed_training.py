@@ -4,6 +4,7 @@ pd.set_option('display.max_colwidth', 140)
 pd.set_option('display.width', 2000)
 import json
 import os
+import math
 import hashlib
 m = hashlib.md5()
 import pickle
@@ -48,9 +49,16 @@ for ind,dataset in enumerate(args.datasets.split(',')):
 
     dataset = TriviaQaOpenDataset(source_dir)
     # just loading the pkl that was saved in build_span_corpus
-    all_dev_questions += dataset.get_dev()
-    if args.sample_first<1.0:
+    if args.sample_first==1.0 or ind == 0:
+        all_dev_questions += dataset.get_dev()
+
+    # sample_first assumes the first dataset in the list is our target dataset, to ablate we may whish
+    # to take only a sample of it for training. sample_first is between (0,1]
+    if args.sample_first<1.0 and ind == 0:
         all_train_questions += list(pd.Series(dataset.get_train()).sample(frac=args.sample_first))
+    elif args.sample_first>1.0 and ind == 0:
+        train = dataset.get_train()
+        all_train_questions += train * math.floor(args.sample_first) + list(pd.Series(train).sample(frac=args.sample_first % 1))
     else:
         all_train_questions += dataset.get_train()
 
