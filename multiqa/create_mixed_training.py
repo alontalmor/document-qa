@@ -25,19 +25,17 @@ parser = argparse.ArgumentParser(description='Evaluate a model on TriviaQA data'
 parser.add_argument('datasets')
 parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
-parser.add_argument("--limit_train_size", type=int, default=0,
+parser.add_argument("--sample_rest", type=int, default=1.0,
                         help="Sample only this amount from training")
 args = parser.parse_args()
 
-if args.sample_first<1.0:
-    datasets = args.datasets.split(',')
-    datasets[0] += '_' + str(args.sample_first).replace('.','')
-    model_name = '__'.join(datasets)
-else:
-    model_name = args.datasets.replace(',','__')
 
-if args.limit_train_size!=0:
-    model_name += '___' + str(args.limit_train_size)
+model_name = args.datasets.replace(',','__')
+if args.sample_first != 1.0:
+    model_name += '___SF' + str(args.limit_train_size)
+
+if args.sample_rest !=  1.0:
+    model_name += '___SR' + str(args.sample_rest)
 
 
 all_train_questions = []
@@ -62,7 +60,10 @@ for ind,dataset_name in enumerate(args.datasets.split(',')):
         print("dataset %s oversampled sampled train size %f" % (dataset_name,len(oversampled_train)))
         all_train_questions += oversampled_train
     else:
-        all_train_questions += dataset.get_train()
+        if args.sample_rest<1.0:
+            all_train_questions += list(pd.Series(train).sample(frac=args.sample_rest))
+        else:
+            all_train_questions += dataset.get_train()
 
     print("total train size %f" % (len(all_train_questions)))
 
@@ -74,10 +75,6 @@ if len(all_dev_questions) >= 8000:
 
 # randomizing
 all_train_questions = list(pd.Series(all_train_questions).sample(frac=1))
-
-if args.limit_train_size!=0:
-    all_train_questions = list(pd.Series(all_train_questions).sample(n=args.limit_train_size))
-
 
 # Saving new training run:
 print('saving new files')

@@ -24,7 +24,7 @@ parser.add_argument('datasets')
 parser.add_argument('GPU')
 parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
-parser.add_argument("--limit_train_size", type=int, default=0,
+parser.add_argument("--sample_rest", type=int, default=1.0,
                         help="Sample only this amount from training")
 parser.add_argument("--n_epochs", type=str, default=None,
                         help="Max number of epoches to train on ")
@@ -34,15 +34,13 @@ parser.add_argument("--hl_dim", type=str, default=None,
                     help="hidden layer dim size")
 args = parser.parse_args()
 
-if args.sample_first<1.0:
-    datasets = args.datasets.split(',')
-    datasets[0] += '_' + str(args.sample_first).replace('.','')
-    model_name = '__'.join(datasets)
-else:
-    model_name = args.datasets.replace(',','__')
 
-if args.limit_train_size!=0:
-    model_name += '___' + str(args.limit_train_size)
+model_name = args.datasets.replace(',','__')
+if args.sample_first != 1.0:
+    model_name += '___SF' + str(args.limit_train_size)
+
+if args.sample_rest !=  1.0:
+    model_name += '___SR' + str(args.sample_rest)
 
 
 
