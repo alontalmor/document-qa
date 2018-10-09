@@ -60,7 +60,7 @@ for ind,dataset_name in enumerate(args.datasets.split(',')):
         print("dataset %s oversampled sampled train size %f" % (dataset_name,len(oversampled_train)))
         all_train_questions += oversampled_train
     else:
-        if args.sample_rest<1.0 and ind < 0:
+        if args.sample_rest<1.0 and ind > 0:
             all_train_questions += list(pd.Series(dataset.get_train()).sample(frac=args.sample_rest))
         else:
             all_train_questions += dataset.get_train()
