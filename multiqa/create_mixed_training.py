@@ -43,9 +43,9 @@ if args.limit_train_size!=0:
 all_train_questions = []
 all_dev_questions = []
 all_filemaps= {}
-for ind,dataset in enumerate(args.datasets.split(',')):
-    print('loading ' + dataset)
-    source_dir = join(CORPUS_DIR, "triviaqa", "web-open", dataset)
+for ind,dataset_name in enumerate(args.datasets.split(',')):
+    print('loading ' + dataset_name)
+    source_dir = join(CORPUS_DIR, "triviaqa", "web-open", dataset_name)
 
     dataset = TriviaQaOpenDataset(source_dir)
     # just loading the pkl that was saved in build_span_corpus
@@ -58,9 +58,13 @@ for ind,dataset in enumerate(args.datasets.split(',')):
         all_train_questions += list(pd.Series(dataset.get_train()).sample(frac=args.sample_first))
     elif args.sample_first>1.0 and ind == 0:
         train = dataset.get_train()
-        all_train_questions += train * math.floor(args.sample_first) + list(pd.Series(train).sample(frac=args.sample_first % 1))
+        oversampled_train = train * math.floor(args.sample_first) + list(pd.Series(train).sample(frac=args.sample_first % 1))
+        print("dataset %s oversampled sampled train size %f" % (dataset_name,len(oversampled_train)))
+        all_train_questions += oversampled_train
     else:
         all_train_questions += dataset.get_train()
+
+    print("total train size %f" % (len(all_train_questions)))
 
     with open(join(source_dir, "file_map.json"),'r') as f:
         all_filemaps.update(json.load(f))
