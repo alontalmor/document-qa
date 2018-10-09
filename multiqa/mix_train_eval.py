@@ -24,7 +24,7 @@ parser.add_argument('datasets')
 parser.add_argument('GPU')
 parser.add_argument("--sample_first", type=float, default=1.0,
                         help="Percentage to sample first dataset")
-parser.add_argument("--sample_rest", type=int, default=1.0,
+parser.add_argument("--sample_rest", type=float, default=1.0,
                         help="Sample only this amount from training")
 parser.add_argument("--n_epochs", type=str, default=None,
                         help="Max number of epoches to train on ")
