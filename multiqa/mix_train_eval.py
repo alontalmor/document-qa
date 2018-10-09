@@ -37,7 +37,7 @@ args = parser.parse_args()
 
 model_name = args.datasets.replace(',','__')
 if args.sample_first != 1.0:
-    model_name += '___SF' + str(args.limit_train_size)
+    model_name += '___SF' + str(args.sample_first)
 
 if args.sample_rest !=  1.0:
     model_name += '___SR' + str(args.sample_rest)
