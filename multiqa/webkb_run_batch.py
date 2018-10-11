@@ -225,7 +225,7 @@ while True:
             # running the docqa evaluation
             source_dir = target_dir
             wa_proc = call('python docqa/eval/triviaqa_full_document_eval.py --n_processes 8 --n_paragraphs 100  -c open-dev' + \
-                           ' --tokens 800  ' + args.model + ' --source_dir ' + source_dir + ' --n_span_per_q 20', shell=True,
+                           ' --tokens 800  ' + args.model + ' --source_dir ' + source_dir + ' --n_span_per_q 10', shell=True,
                             preexec_fn=os.setsid)
 
             # storing results

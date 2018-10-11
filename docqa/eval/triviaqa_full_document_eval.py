@@ -352,7 +352,7 @@ def main():
 
     results_df = pd.DataFrame(df_flat)
     #Alon: outputing the estimates for all the
-    results_df = results_df.groupby(['question_id', 'text_answer']).apply(lambda df: df.ix[df['predicted_score'].argmax()]).reset_index(drop=True)
+    #results_df = results_df.groupby(['question_id', 'text_answer']).apply(lambda df: df.ix[df['predicted_score'].argmax()]).reset_index(drop=True)
     results_df.sort_values(by=['question_id', 'predicted_score'], ascending=False).set_index(['question_id', 'text_answer'])[
         ['question','predicted_score', 'text_em']].to_csv('results.csv')
 
