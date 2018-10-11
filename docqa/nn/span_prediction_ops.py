@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-
+import docqa.config
 
 """
 Some utility functions for dealing with span prediction in tensorflow
@@ -12,15 +12,71 @@ def best_span_from_bounds(start_logits, end_logits, bound=None):
     Brute force approach to finding the best span from start/end logits in tensorflow, still usually
     faster then the python dynamic-programming version
     """
-    b = tf.shape(start_logits)[0]
+    s = tf.shape(start_logits)
+    #s = tf.Print(s, [s], 'len_start_logits', summarize=100)
+    # b = tf.shape(start_logits)[0]
+    b = s[0]
+
+    #top_k_num = 1
+
+    # checking if assigned
+    top_k_num = docqa.config.SPANS_PER_QUESTION
 
     # Using `top_k` to get the index and value at once is faster
     # then using argmax and then gather to get in the value
-    top_k = tf.nn.top_k(start_logits + end_logits, k=1)
-    values, indices = [tf.squeeze(x, axis=[1]) for x in top_k]
+    top_k = tf.nn.top_k(start_logits + end_logits, k=top_k_num)
+    # values, indices = [tf.squeeze(x, axis=[1]) for x in top_k]
+    # values, indices = [x[:, 0] for x in top_k]
+    # values = tf.Print(values, [values], 'values')
+    # indices = tf.Print(indices, [indices], 'indices', summarize=15)
+    #
+    # # Convert to (start_position, length) format
+    # indices = tf.stack([indices, tf.fill((b,), 0)], axis=1)
+    # indices = tf.Print(indices, [indices], 'indices_2', summarize=15)
 
-    # Convert to (start_position, length) format
-    indices = tf.stack([indices, tf.fill((b,), 0)], axis=1)
+    # # i = tf.constant(0)
+    # while_condition = lambda ix, values_, indices_: tf.less(ix, tf.constant(2))
+    # def body(i, values_, indices_):
+    #     values, indices = [x[:, i] for x in top_k]
+    #     values = tf.expand_dims(values, axis=1)
+    #     values = tf.expand_dims(values, axis=2)
+    #     values = tf.Print(values, [values], 'values', summarize=100)
+    #     # indices = tf.Print(indices, [indices], 'indices', summarize=15)
+    #
+    #     # Convert to (start_position, length) format
+    #     indices = tf.stack([indices, tf.fill((b,), 0)], axis=1)
+    #     # indices = tf.Print(indices, [indices], 'indices_2', summarize=15)
+    #
+    #     values_.append(values)
+    #     indices = tf.expand_dims(indices, axis=2)
+    #     indices_.append(indices)
+    #     return i+1, values_, indices_
+    # # do the loop:
+    # values_ = []
+    # indices_ = []
+    # _, values_, indices_ = tf.while_loop(while_condition, body, [0, values_, indices_], back_prop=False)
+
+    values_ = []
+    indices_ = []
+    for i in range(top_k_num):
+        values, indices = [x[:, i] for x in top_k]
+        values = tf.expand_dims(values, axis=1)
+        values = tf.expand_dims(values, axis=2)
+        #values = tf.Print(values, [values], 'values', summarize=100)
+        # indices = tf.Print(indices, [indices], 'indices', summarize=15)
+
+        # Convert to (start_position, length) format
+        indices = tf.stack([indices, tf.fill((b,), 0)], axis=1)
+        # indices = tf.Print(indices, [indices], 'indices_2', summarize=15)
+
+        values_.append(values)
+        indices = tf.expand_dims(indices, axis=2)
+        indices_.append(indices)
+
+    values = tf.concat(values_, axis=2)
+    #values = tf.Print(values, [values], 'values_concat', summarize=100)
+    indices = tf.concat(indices_, axis=2)
+    # indices = tf.Print(indices, [indices], 'indices_concat', summarize=200)
 
     # TODO Might be better to build the batch x n_word x n_word
     # matrix and use tf.matrix_band to zero out the unwanted ones...
@@ -32,22 +88,55 @@ def best_span_from_bounds(start_logits, end_logits, bound=None):
         n_lengths = tf.minimum(bound, tf.shape(start_logits)[1])
 
     def compute(i, values, indices):
-        top_k = tf.nn.top_k(start_logits[:, :-i] + end_logits[:, i:])
-        b_values, b_indices = [tf.squeeze(x, axis=[1]) for x in top_k]
+        #i = tf.Print(i, [i], 'i', summarize=15)
+        top_k = tf.nn.top_k(start_logits[:, :-i] + end_logits[:, i:], k=top_k_num)
+        # b_values, b_indices = [tf.squeeze(x, axis=[1]) for x in top_k]
+        # b_values = tf.Print(b_values, [b_values], 'b_values', summarize=15)
+        # b_indices = tf.Print(b_indices, [b_indices], 'b_indices', summarize=15)
+        #
+        # b_indices = tf.stack([b_indices, tf.fill((b, ), i)], axis=1)
+        # indices = tf.where(b_values > values, b_indices, indices)
+        # values = tf.maximum(values, b_values)
 
-        b_indices = tf.stack([b_indices, tf.fill((b, ), i)], axis=1)
-        indices = tf.where(b_values > values, b_indices, indices)
-        values = tf.maximum(values, b_values)
+        values_ = []
+        indices_ = []
+        for j in range(top_k_num):
+            b_values, b_indices = [x[:, j] for x in top_k]
+            b_values = tf.expand_dims(b_values, axis=1)
+            b_values = tf.expand_dims(b_values, axis=2)
+            #b_values = tf.Print(b_values, [b_values], 'b_values', summarize=100)
+            # b_indices = tf.Print(b_indices, [b_indices], 'b_indices_bef', summarize=15)
+
+            # Convert to (start_position, length) format
+            b_indices = tf.stack([b_indices, tf.fill((b,), i)], axis=1)
+            # b_indices = tf.Print(b_indices, [b_indices], 'b_indices_aft', summarize=15)
+
+            values_.append(b_values)
+            b_indices = tf.expand_dims(b_indices, axis=2)
+            indices_.append(b_indices)
+        values_conc = tf.concat(values_, axis=2)
+        #values_conc = tf.Print(values_conc, [values_conc], 'values_concat_loop', summarize=200)
+        indices_conc = tf.concat(indices_, axis=2)
+
+        values = tf.concat([values, values_conc], axis=1)
+        #values = tf.Print(values, [values], 'values_concat_concat', summarize=200)
+        indices = tf.concat([indices, indices_conc], axis=1)
+        # indices = tf.Print(indices, [indices], 'indices_concat_concat', summarize=200)
+
         return i+1, values, indices
 
     _, values, indices = tf.while_loop(
         lambda ix, values, indices: ix < n_lengths,
         compute,
         [1, values, indices],
+        shape_invariants=[tf.TensorShape([]), tf.TensorShape([None, None, None]), tf.TensorShape([None, None, None])],
         back_prop=False)
 
-    spans = tf.stack([indices[:, 0], indices[:, 0] + indices[:, 1]], axis=1)
-    return spans, values
+    #values = tf.Print(values, [values], 'values_final', summarize=600)
+    # indices = tf.Print(indices, [indices], 'indices_final', summarize=200)
+    # spans = tf.stack([indices[:, 0], indices[:, 0] + indices[:, 1]], axis=1)
+    # return spans, values
+    return indices, values
 
 
 def packed_span_f1_mask(spans, l, bound):

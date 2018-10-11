@@ -2,7 +2,7 @@ import argparse
 import json
 from os.path import join
 from typing import List
-
+import docqa.config
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -49,16 +49,34 @@ class RecordParagraphSpanPrediction(Evaluator):
         pred_f1s = np.zeros(len(data))
         pred_em = np.zeros(len(data))
         text_answers = []
+        spans_aggr = []
+        scores_aggr = []
 
         for i in tqdm(range(len(data)), total=len(data), ncols=80, desc="scoring"):
             point = data[i]
             if point.answer is None and not self.record_text_ans:
                 continue
             text = point.get_context()
-            pred_span = spans[i]
-            pred_text = " ".join(text[pred_span[0]:pred_span[1] + 1])
+
+            all_spans = []
+            r,c = spans[i].shape
+            for j in range(r):
+                for k in range(c):
+                    if j%2 == 0:
+                        all_spans.append((spans[i][j][k], spans[i][j][k] + spans[i][j+1][k]))
+            spans_aggr.append(all_spans)
+            all_scores = np.reshape(model_scores[i], model_scores[i].shape[0]*model_scores[i].shape[1]).tolist()
+            scores_aggr.append(all_scores)
+
+            all_texts = []
+            for span in all_spans:
+                pred_text = " ".join(text[span[0]:span[1] + 1])
+                all_texts.append(pred_text)
+
+            #pred_span = spans[i]
+            pred_text = all_texts[np.argmax(all_scores)]
             if self.record_text_ans:
-                text_answers.append(pred_text)
+                text_answers.append(all_texts)
                 if point.answer is None:
                     continue
 
@@ -77,9 +95,10 @@ class RecordParagraphSpanPrediction(Evaluator):
         results["question"] = [' '.join(x.question) for x in data]
         if self.record_text_ans:
             results["text_answer"] = text_answers
-        results["predicted_score"] = model_scores
-        results["predicted_start"] = spans[:, 0]
-        results["predicted_end"] = spans[:, 1]
+        results["predicted_score"] = scores_aggr
+        # results["predicted_start"] = spans_aggr
+        # results["predicted_end"] = spans_aggr
+        results["predicted_span"] = spans_aggr
         results["text_f1"] = pred_f1s
         results["rank"] = [x.rank for x in data]
         results["text_em"] = pred_em
@@ -118,6 +137,8 @@ def main():
                                  "open-dev", "open-train", "wiki-dev", "wiki-test"],
                         default="web-verified-dev")
     parser.add_argument("-s", "--source_dir", type=str, default=None,
+                        help="where to take input files")
+    parser.add_argument( "--n_span_per_q", type=int, default=1,
                         help="where to take input files")
     args = parser.parse_args()
 
@@ -158,10 +179,14 @@ def main():
         else:
             raise AssertionError()
 
+    ### ALON debuging
+    #test_questions = test_questions[0:5]
+
     corpus = dataset.evidence
     splitter = MergeParagraphs(args.tokens)
 
     per_document = args.corpus.startswith("web")  # wiki and web are both multi-document
+    #per_document = True
 
     filter_name = args.filter
     if filter_name is None:
@@ -184,6 +209,8 @@ def main():
         raise ValueError()
 
     n_questions = args.n_sample
+    docqa.config.SPANS_PER_QUESTION = args.n_span_per_q
+    #n_questions = 1
     if n_questions is not None:
         test_questions.sort(key=lambda x:x.question_id)
         np.random.RandomState(0).shuffle(test_questions)
@@ -237,9 +264,7 @@ def main():
 
     df = pd.DataFrame(evaluation.per_sample)
 
-    # Alon: outputing the estimates for all the
-    df.sort_values(by=['question_id', 'predicted_score'], ascending=False).set_index(['question_id', 'text_answer'])[
-        ['question','predicted_score', 'text_em']].to_csv('results.csv')
+
 
     if args.official_output is not None:
         print("Saving question result")
@@ -296,6 +321,7 @@ def main():
 
     print("Computing scores")
 
+
     if per_document:
         group_by = ["question_id", "doc_id"]
     else:
@@ -303,8 +329,11 @@ def main():
 
     # Print a table of scores as more paragraphs are used
     df.sort_values(group_by + ["rank"], inplace=True)
-    f1 = compute_ranked_scores(df, "predicted_score", "text_f1", group_by)
-    em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
+    df_scores = df.copy(deep=True)
+    df_scores['predicted_score'] = df_scores['predicted_score'].apply(lambda x: pd.Series(x).max())
+
+    em = compute_ranked_scores(df_scores, "predicted_score", "text_em", group_by)
+    f1 = compute_ranked_scores(df_scores, "predicted_score", "text_f1", group_by)
     table = [["N Paragraphs", "EM", "F1"]]
     table += list([str(i+1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
 
@@ -313,6 +342,19 @@ def main():
                                                             'max_EM':table_df.max().ix['EM'], \
                                                             'max_F1':table_df.max().ix['F1'], \
                                                             'result_table': str(table_df)})
+
+    df_flat = []
+    for id,question in df.iterrows():
+        for text_answer,predicted_span,predicted_score in zip(question['text_answer'],question['predicted_span'],question['predicted_score']):
+            new_question = dict(question.copy())
+            new_question.update({'text_answer':text_answer,'predicted_span':predicted_span,'predicted_score':predicted_score})
+            df_flat.append(new_question)
+
+    results_df = pd.DataFrame(df_flat)
+    #Alon: outputing the estimates for all the
+    results_df = results_df.groupby(['question_id', 'text_answer']).apply(lambda df: df.ix[df['predicted_score'].argmax()]).reset_index(drop=True)
+    results_df.sort_values(by=['question_id', 'predicted_score'], ascending=False).set_index(['question_id', 'text_answer'])[
+        ['question','predicted_score', 'text_em']].to_csv('results.csv')
 
     print_table(table)
 if __name__ == "__main__":
