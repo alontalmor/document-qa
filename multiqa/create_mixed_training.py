@@ -50,20 +50,49 @@ for ind,dataset_name in enumerate(args.datasets.split(',')):
     if args.sample_first==1.0 or ind == 0:
         all_dev_questions += dataset.get_dev()
 
+    num_of_contexts = (pd.Series(args.datasets.replace('-G','').replace('-O','').split(',')) == \
+                       dataset_name.replace('-G','').replace('-O','')).sum()
+
+    train = dataset.get_train()
+
+    # Filtering cases with no answer:
+    train_with_ans = []
+    for question in train:
+        if pd.Series([len(doc.answer_spans) for doc in question.all_docs]).sum()>0:
+            train_with_ans.append(question)
+
+    print("number of question with answer is %d" % (len(train_with_ans)))
+
     # sample_first assumes the first dataset in the list is our target dataset, to ablate we may whish
     # to take only a sample of it for training. sample_first is between (0,1]
-    if args.sample_first<1.0 and ind == 0:
-        all_train_questions += list(pd.Series(dataset.get_train()).sample(frac=args.sample_first))
+    if args.sample_first<=1.0 and ind == 0:
+        all_train_questions += list(pd.Series(train_with_ans).sample(frac=args.sample_first))
     elif args.sample_first>1.0 and ind == 0:
-        train = dataset.get_train()
-        oversampled_train = train * math.floor(args.sample_first) + list(pd.Series(train).sample(frac=args.sample_first % 1))
+        # Greater than 100 means absolute number of samples, converting to frac
+        if args.sample_first>100:
+            args.sample_first = float(args.sample_first)/len(train_with_ans)
+            print('sampling first dataset in frac = %f' % args.sample_first)
+
+        oversampled_train = train_with_ans * math.floor(args.sample_first) + list(pd.Series(train_with_ans).sample(frac=args.sample_first % 1))
         print("dataset %s oversampled sampled train size %f" % (dataset_name,len(oversampled_train)))
         all_train_questions += oversampled_train
-    else:
-        if args.sample_rest<1.0 and ind > 0:
-            all_train_questions += list(pd.Series(dataset.get_train()).sample(frac=args.sample_rest))
+    else: # Rest of the datasets
+        # Greater than 100 means absolute number of samples, converting to frac
+        if args.sample_rest > 100:
+            sample_rest_frac = float(args.sample_rest) / len(train_with_ans)
+            sample_rest_frac /= num_of_contexts
+            print('sampling rest dataset in frac = %f' % sample_rest_frac)
         else:
-            all_train_questions += dataset.get_train()
+            sample_rest_frac /= num_of_contexts
+            sample_rest_frac = args.sample_rest
+
+        if args.sample_rest<=1.0 and ind > 0:
+            all_train_questions += list(pd.Series(train_with_ans).sample(frac=sample_rest_frac))
+        else:
+            oversampled_train = train_with_ans * math.floor(sample_rest_frac) + list(pd.Series(train_with_ans).sample(frac=sample_rest_frac % 1))
+            print("multiqa dataset %s oversampled sampled train size %f" % (dataset_name, len(oversampled_train)))
+            all_train_questions += oversampled_train
+            #all_train_questions += train_with_ans
 
     print("total train size %f" % (len(all_train_questions)))
 
