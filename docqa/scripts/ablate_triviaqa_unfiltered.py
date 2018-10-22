@@ -37,6 +37,8 @@ def main():
                         help="char level embeddings")
     parser.add_argument("--hl_dim", type=int, default=None,
                         help="hidden layer dim size")
+    parser.add_argument("--init_from", type=str, default=None,
+                        help="model to init from")
     args = parser.parse_args()
     mode = args.mode
 
@@ -92,7 +94,7 @@ def main():
         SerializableOptimizer("Adadelta", dict(learning_rate=1)),
         num_epochs=n_epochs,num_of_steps=300000, ema=0.999, max_checkpoints_to_keep=2,
         async_encoding=async_encoding, log_period=30, eval_period=1800, save_period=1800,
-        eval_samples=dict(dev=None, train=6000),regularization_weight=2
+        eval_samples=dict(dev=None, train=6000),regularization_weight=2.0
     )
 
     data = PreprocessedData(data, extract, train, test, eval_on_verified=False)
@@ -103,7 +105,8 @@ def main():
         notes = f.read()
     notes = "Mode: " + args.mode + "\n" + notes
 
-    trainer.start_training(data, model, params, eval, model_dir.ModelDir(out), notes)
+    trainer.start_training(data, model, params, eval, model_dir.ModelDir(out), notes, initialize_from= \
+        model_dir.ModelDir(args.init_from).get_latest_checkpoint())
 
 
 if __name__ == "__main__":
