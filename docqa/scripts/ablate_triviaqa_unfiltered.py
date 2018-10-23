@@ -105,8 +105,12 @@ def main():
         notes = f.read()
     notes = "Mode: " + args.mode + "\n" + notes
 
-    trainer.start_training(data, model, params, eval, model_dir.ModelDir(out), notes, initialize_from= \
-        model_dir.ModelDir(args.init_from).get_latest_checkpoint())
+    if args.init_from is not None:
+        init_from = model_dir.ModelDir(args.init_from).get_best_weights()
+    else:
+        init_from = None
+
+    trainer.start_training(data, model, params, eval, model_dir.ModelDir(out), notes, initialize_from=init_from)
 
 
 if __name__ == "__main__":
