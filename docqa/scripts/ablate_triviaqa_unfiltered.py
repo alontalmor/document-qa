@@ -39,7 +39,7 @@ def main():
                         help="hidden layer dim size")
     parser.add_argument("--regularization", type=int, default=None,
                         help="hidden layer dim size")
-    parser.add_argument("--LR", type=int, default=1.0,
+    parser.add_argument("--LR", type=float, default=1.0,
                         help="hidden layer dim size")
     parser.add_argument("--init_from", type=str, default=None,
                         help="model to init from")
