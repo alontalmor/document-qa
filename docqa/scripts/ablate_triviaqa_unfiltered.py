@@ -37,6 +37,10 @@ def main():
                         help="char level embeddings")
     parser.add_argument("--hl_dim", type=int, default=None,
                         help="hidden layer dim size")
+    parser.add_argument("--regularization", type=int, default=None,
+                        help="hidden layer dim size")
+    parser.add_argument("--LR", type=int, default=1.0,
+                        help="hidden layer dim size")
     parser.add_argument("--init_from", type=str, default=None,
                         help="model to init from")
     args = parser.parse_args()
@@ -91,10 +95,10 @@ def main():
     async_encoding = 10
     #async_encoding = 0
     params = TrainParams(
-        SerializableOptimizer("Adadelta", dict(learning_rate=1)),
+        SerializableOptimizer("Adadelta", dict(learning_rate=args.LR)),
         num_epochs=n_epochs,num_of_steps=300000, ema=0.999, max_checkpoints_to_keep=2,
         async_encoding=async_encoding, log_period=30, eval_period=1800, save_period=1800,
-        eval_samples=dict(dev=None, train=6000),regularization_weight=2.0
+        eval_samples=dict(dev=None, train=6000),regularization_weight=None
     )
 
     data = PreprocessedData(data, extract, train, test, eval_on_verified=False)
@@ -107,6 +111,8 @@ def main():
 
     if args.init_from is not None:
         init_from = model_dir.ModelDir(args.init_from).get_best_weights()
+        if init_from is None:
+            init_from = model_dir.ModelDir(args.init_from).get_latest_checkpoint()
     else:
         init_from = None
 
