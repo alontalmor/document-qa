@@ -63,7 +63,11 @@ def main():
         hl_dim = int(args.hl_dim)
         out += '--hl' + str(hl_dim)
 
-    model = get_model(char_th, hl_dim, mode, WithIndicators())
+    if args.init_from is None:
+        model = get_model(char_th, hl_dim, mode, WithIndicators())
+    else:
+        md = model_dir.ModelDir(args.init_from)
+        model = md.get_model()
 
     extract = ExtractMultiParagraphsPerQuestion(MergeParagraphs(args.n_tokens), ShallowOpenWebRanker(16),
                                                 model.preprocessor, intern=True)
