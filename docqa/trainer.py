@@ -274,7 +274,7 @@ def start_training(
     # Else we assume the model has already completed its first phase of initialization
 
     if not dry_run:
-        init(out, model, False)
+        init(out, model, True)
 
     _train(model, data, None, initialize_from,
            True, train_params, evaluators, out, notes, dry_run)
