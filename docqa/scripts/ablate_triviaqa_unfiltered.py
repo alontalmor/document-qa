@@ -96,6 +96,8 @@ def main():
         n_epochs = args.n_epochs
         out += '--' + str(n_epochs)
 
+    if args.LR != 1.0:
+        out += '--' + str(args.LR)
 
     data = TriviaQaOpenDataset(args.source_dir)
 
@@ -103,7 +105,7 @@ def main():
     #async_encoding = 0
     params = TrainParams(
         SerializableOptimizer("Adadelta", dict(learning_rate=args.LR)),
-        num_epochs=n_epochs,num_of_steps=args.LR, ema=0.999, max_checkpoints_to_keep=2,
+        num_epochs=n_epochs,num_of_steps=250000, ema=0.999, max_checkpoints_to_keep=2,
         async_encoding=async_encoding, log_period=30, eval_period=1800, save_period=args.save_every,
         eval_samples=dict(dev=None, train=6000),regularization_weight=None
     )
