@@ -274,7 +274,7 @@ def start_training(
     # Else we assume the model has already completed its first phase of initialization
 
     if not dry_run:
-        init(out, model, True)
+        init(out, model, False)
 
     _train(model, data, None, initialize_from,
            True, train_params, evaluators, out, notes, dry_run)
@@ -461,27 +461,12 @@ def _train(model: Model,
 
             # Occasional evaluation
             if (on_step % train_params.eval_period == 0) or start_eval:
-                print("* Running evaluation...")
+                print("Running evaluation...")
                 start_eval = False
                 t0 = time.perf_counter()
                 for name, data in eval_datasets.items():
                     n_samples = train_params.eval_samples.get(name)
                     evaluation = evaluator_runner.run_evaluators(sess, data, name, n_samples)
-                    print("Writing logs")
-                    model_name = out.dir.split('/')[-1]
-                    group_by = ["question_id"]
-                    df = pd.DataFrame(evaluation.per_sample)
-                    df.sort_values(group_by + ["rank"], inplace=True)
-                    f1 = compute_ranked_scores(df, "predicted_score", "text_f1", group_by)
-                    em = compute_ranked_scores(df, "predicted_score", "text_em", group_by)
-                    table = [["N Paragraphs", "EM", "F1"]]
-                    table += list([str(i + 1), "%.4f" % e, "%.4f" % f] for i, (e, f) in enumerate(zip(em, f1)))
-                    table_df = pd.DataFrame(table[1:], columns=table[0]).drop(['N Paragraphs'], axis=1)
-                    ElasticLogger().write_log('INFO', 'Training Eval', context_dict={'step':on_step,'model': model_name, \
-                                                                               'max_EM': table_df.max().ix['EM'], \
-                                                                               'max_F1': table_df.max().ix['F1'], \
-                                                                               'result_table': str(table_df)})
-
                     for s in evaluation.to_summaries(name + "-"):
                         summary_writer.add_summary(s, on_step)
 
@@ -540,7 +525,7 @@ def _train_async(model: Model,
     if parameter_checkpoint is not None:
         print("Restoring parameters from %s" % parameter_checkpoint)
         saver = tf.train.Saver()
-        saver.restore(sess, checkpoint)
+        saver.restore(sess, parameter_checkpoint)
         saver = None
 
     print("Setting up model prediction / tf...")
@@ -575,8 +560,13 @@ def _train_async(model: Model,
         saver.restore(sess, checkpoint)
         print("Loaded checkpoint: " + str(sess.run(global_step)))
     else:
-        print("Initializing parameters...")
-        sess.run(tf.global_variables_initializer())
+        if parameter_checkpoint is not None:
+            print("Initializing training variables...")
+            vars = [x for x in tf.global_variables() if x not in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)]
+            sess.run(tf.variables_initializer(vars))
+        else:
+            print("Initializing parameters...")
+            sess.run(tf.global_variables_initializer())
 
     # Make sure no bugs occur that add to the graph in the train loop, that can cause (eventuall) OOMs
     tf.get_default_graph().finalize()
@@ -660,19 +650,6 @@ def _train_async(model: Model,
                     for name, data in eval_datasets.items():
                         n_samples = train_params.eval_samples.get(name)
                         evaluation = evaluator_runner.run_evaluators(sess, data, name, n_samples, eval_dict)
-
-                        print("Writing logs")
-                        model_name = out.dir.split('/')[-1]
-                        print(evaluation.scalars)
-                        ElasticLogger().write_log('INFO', 'Training Eval', \
-                                                  context_dict={'name':name, 'epoch':int(epoch),'step': int(on_step), 'model': model_name, \
-                                                     'loss': float(evaluation.scalars['loss']), \
-                                                     'b8/question-text-em': float(evaluation.scalars['loss']), \
-                                                     'b8/text-em-k-tau': float(evaluation.scalars['b8/text-em-k-tau']), \
-                                                     'b8/text-f1-k-tau':float(evaluation.scalars['b8/text-f1-k-tau']), \
-                                                     'b8/paragraph-text-em': float(evaluation.scalars['b8/paragraph-text-em']), \
-                                                     'b8/paragraph-text-f1': float(evaluation.scalars['b8/paragraph-text-f1'])})
-
                         for s in evaluation.to_summaries(name + "-"):
                             summary_writer.add_summary(s, on_step)
 
@@ -687,7 +664,6 @@ def _train_async(model: Model,
 
                     print("Evaluation took: %.3f seconds" % (time.perf_counter() - t0))
     finally:
-        print('Closing Session')
         sess.run(train_close)  # terminates the enqueue thread with an exception
 
     train_enqueue_thread.join()
@@ -737,6 +713,4 @@ def test(model: Model, evaluators, datasets: Dict[str, Dataset], loader, checkpo
     dataset_outputs = {}
     for name, dataset in datasets.items():
         dataset_outputs[name] = evaluator_runner.run_evaluators(sess, dataset, name, sample, {})
-
-
     return dataset_outputs
